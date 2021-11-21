@@ -2,6 +2,7 @@ var AWS = require('aws-sdk');
 AWS.config.update({region:'us-east-1'});
 var db = new AWS.DynamoDB();
 
+// USERS FUNCTIONS
 
 const loginLookup = function(username, callback) {
   const params = {
@@ -89,6 +90,8 @@ const changeAffiliation = function(username, newAffiliation, callback) {
   });
 }
 
+// MESSAGE FUNCTIONS
+
 const addMessage = function(id, timestamp, author, message) {
   const params = {
     TableName: "messages",
@@ -163,13 +166,104 @@ const getMessage = function(id) {
   });
 }
 
+// POSTS FUNCTIONS
+
+const makePost = function(author, content, callback) {
+  const date = new Date().getTime();
+  const params = {
+    TableName: "posts",
+    Item: {
+      "author": {
+        "S": author
+      },
+      "timestamp": {
+        "N": date.toString()
+      },
+      "content": {
+        "S": content
+      },
+      "likes": {
+        "N": "0"
+      }
+    }
+  };
+  db.putItem(params, function(err, data) {
+    callback(err, data);
+  });
+}
+
+const getPostsByAuthor = function(author, callback) {
+  const params = {
+    TableName: "posts",
+    Item: {
+      "author": {
+        "S": author
+      }
+    }
+  }
+  db.query(params, function(err, data) {
+    callback(err, data);
+  });
+}
+
+// FRIENDS FUNCTIONS
+
+const getFriends = function(user, callback) {
+  const params = {
+    TableName: "friends",
+    KeyConditionExpression: "user1 = :user and #x = :y",
+    ExpressionAttributeNames: {
+      "#x": "status"
+    },
+    ExpressionAttributeValues: {
+      ":user": user,
+      ":y": "FRIENDS"
+    }
+  };
+  db.query(params, function(err, data) {
+    callback(err, data);
+  });
+}
+
+const addFriend = function(sender, receiver, callback) {
+  const params = {
+    RequestItems: {
+      "friends": [
+        {
+          PutRequest: {
+            Item: {
+              "user1": { "S": "sender" },
+              "user2": { "S": "receiver" },
+              "status": { "S": "SENT" }
+            }
+          }
+        },
+        {
+          PutRequest: {
+            Item: {
+              "user1": { "S": "receiver" },
+              "user2": { "S": "sender" },
+              "status": { "S": "RECEIVED" }
+            }
+          }
+        }
+      ]
+    }
+  };
+  db.batchWriteItem(params, function(err, data) {
+    callback(err, data);
+  });
+}
+
 
 const database = {
   login_lookup: loginLookup,
   add_user: addUser,
   update_affiliation: changeAffiliation,
   addMessage : addMessage,
-  deleteMessage : deleteMessage
+  deleteMessage : deleteMessage,
+  make_post: makePost,
+  get_friends: getFriends
 };
 
 module.exports = database;

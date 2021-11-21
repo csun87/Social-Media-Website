@@ -102,6 +102,26 @@ const chat = function(req, res) {
 
 }
 
+const makePost = function(req, res) {
+  if (req.session.username) {
+    db.make_post(req.body.content, req.session.username, function(err, data) {
+      if (err) {
+        return res.send({
+          success: false,
+          msg: "Unsuccessful"
+        });
+      } else {
+        return res.send({
+          success: true,
+          msg: null
+        });
+      }
+    });
+  } else {
+    res.redirect("/");
+  }
+}
+
 const routes = {
   get_login_page: renderLogin,
   check_login: checkLogin,
@@ -109,7 +129,8 @@ const routes = {
   signup_user: signupUser,
   get_feed: getFeed,
   sign_out: signout,
-  chat : chat
+  chat : chat,
+  make_post: makePost,
 };
 
 module.exports = routes;
