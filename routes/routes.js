@@ -1,6 +1,7 @@
 const fs = require("fs");
 const crypto = require("crypto");
 var db = require('../models/database.js');
+const AWS = require("aws-sdk");
 
 const renderLogin = function(req, res) {
   if (req.session.username) {
@@ -12,6 +13,10 @@ const renderLogin = function(req, res) {
 
 const renderSignup = function(req, res) {
   res.render("signup.ejs", {});
+}
+
+const renderWall = function(req, res) {
+  res.render("wall.ejs", {});
 }
 
 const checkLogin = function(req, res) {
@@ -104,7 +109,7 @@ const chat = function(req, res) {
 
 const makePost = function(req, res) {
   if (req.session.username) {
-    db.make_post(req.body.content, req.session.username, function(err, data) {
+    db.make_post(req.session.username, req.body.content, function(err, data) {
       if (err) {
         return res.send({
           success: false,
@@ -122,6 +127,67 @@ const makePost = function(req, res) {
   }
 }
 
+const getPosts = function(req, res) {
+  if (req.session.username) {
+    db.get_friends(req.session.username, function(err, data) {
+      if (err) {
+        return res.send({
+          success: false,
+          msg: JSON.stringify(err, null, 2)
+        });
+      } else {
+        var docClient = new AWS.DynamoDB.DocumentClient();
+        const promises = [];
+        const temp = {
+          TableName: "posts",
+          KeyConditionExpression: "author = :x",
+          ExpressionAttributeValues: {
+            ":x": req.session.username
+          }
+        };
+        promises.push(docClient.query(temp).promise().then(
+          function(data) {
+            return data.Items;
+          },
+          function(err) {
+            console.error("Unable to query. Error: ", JSON.stringify(err, null, 2));
+          }
+        ));
+        data.Items.forEach(function(item) {
+          const params = {
+            TableName: "posts",
+            KeyConditionExpression: "author = :x",
+            ExpressionAttributeValues: {
+              ":x": item.user2.S
+            }
+          };
+          promises.push(docClient.query(params).promise().then(
+            function(data) {
+              return data.Items;
+            },
+            function(err) {
+              console.error("Unable to query. Error: ", JSON.stringify(err, null, 2));
+            }
+          ));
+        });
+        Promise.all(promises).then(function(data) {
+          const posts = [];
+          data.forEach(function(data) {
+            posts.push(data);
+          });
+          return res.send({
+            success: true,
+            data: posts,
+            msg: null
+          });
+        });
+      }
+    });
+  } else {
+    res.redirect("/");
+  }
+}
+
 const routes = {
   get_login_page: renderLogin,
   check_login: checkLogin,
@@ -131,6 +197,8 @@ const routes = {
   sign_out: signout,
   chat : chat,
   make_post: makePost,
+  get_posts: getPosts,
+  render_wall: renderWall
 };
 
 module.exports = routes;

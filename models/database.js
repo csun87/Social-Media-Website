@@ -200,25 +200,25 @@ const getPostsByAuthor = function(author, callback) {
         "S": author
       }
     }
-  }
+  };
   db.query(params, function(err, data) {
     callback(err, data);
   });
 }
+
 
 // FRIENDS FUNCTIONS
 
 const getFriends = function(user, callback) {
   const params = {
     TableName: "friends",
-    KeyConditionExpression: "user1 = :user and #x = :y",
-    ExpressionAttributeNames: {
-      "#x": "status"
-    },
+    KeyConditionExpression: "user1 = :user",
     ExpressionAttributeValues: {
-      ":user": user,
-      ":y": "FRIENDS"
-    }
+      ":user": {
+        "S": user
+      }
+    },
+    // FilterExpression: "states = FRIENDS"
   };
   db.query(params, function(err, data) {
     callback(err, data);
@@ -234,7 +234,7 @@ const addFriend = function(sender, receiver, callback) {
             Item: {
               "user1": { "S": "sender" },
               "user2": { "S": "receiver" },
-              "status": { "S": "SENT" }
+              "states": { "S": "FRIENDS" }
             }
           }
         },
@@ -243,7 +243,7 @@ const addFriend = function(sender, receiver, callback) {
             Item: {
               "user1": { "S": "receiver" },
               "user2": { "S": "sender" },
-              "status": { "S": "RECEIVED" }
+              "states": { "S": "FRIENDS" }
             }
           }
         }
@@ -263,6 +263,7 @@ const database = {
   addMessage : addMessage,
   deleteMessage : deleteMessage,
   make_post: makePost,
+  get_posts_by_author: getPostsByAuthor,
   get_friends: getFriends
 };
 

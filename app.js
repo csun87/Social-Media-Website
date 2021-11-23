@@ -21,6 +21,8 @@ app.get("/feed", routes.get_feed);
 app.get("/signout", routes.sign_out);
 app.get("/chat", routes.chat);
 app.post("/makepost", routes.make_post);
+app.post("/getposts", routes.get_posts);
+app.get("/wall", routes.render_wall);
 
 console.log('Authors: Christian Sun, Belinda Xi, William Fan, Kishen Sivabalan');
 app.listen(8080, () => console.log("HTTP server started on port 8080!"));
