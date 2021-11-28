@@ -198,7 +198,15 @@ const io_on = function(socket) {
       console.log(err)
    } else {
       console.log(data);
-      socket.emit('prev_messages', data);
+      var send = []
+
+      var username = {
+        user : "Kishen"
+      }
+      send.push(data);
+      send.push(username)
+      console.log(send)
+      socket.emit('prev_messages', send);
    }
 
    })
@@ -212,9 +220,33 @@ const io_on = function(socket) {
           console.log(data);
       }
     });
-    console.log("message received")
+    console.log("message received");
     socket.emit('chat message', arg);
   });
+
+  //Refreshing the page
+  socket.on("refresh", arg => {
+    console.log("Refreshing");
+
+    db.get_Messages(0, function(err,data) {
+      if(err) {
+         console.log(err)
+      } else {
+         console.log(data);
+         var send = []
+   
+         var username = {
+           user : "Kishen"
+         }
+         send.push(data);
+         send.push(username)
+         console.log(send)
+         socket.emit('refr', send);
+      }
+   
+      });
+  });
+
 }
 
 

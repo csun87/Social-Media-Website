@@ -27,6 +27,7 @@
     width: 70%;
     background-color:rgb(61, 58, 58);
     height : 100%;
+    color : white;
   }
 
   
@@ -57,11 +58,16 @@
     color: rgb(232, 235, 235);
     font-size: 120%;
     content: left;
+    
   }
 
   .flex {
     display: flex;
     flex-direction: row;
+  }
+
+  .r {
+    color: blue;
   }
 
 
@@ -82,10 +88,9 @@
     </div>
     <div class = "card">
         <div class = "card-body">
-          <ul id = "messages">
+          <ul class = "mesList" id = "messages">
             First
           </ul>
-          <p>4</p>
 
           
             
@@ -97,32 +102,67 @@
     </form>
   </div>
 
- 
+
 
 <script src="/socket.io/socket.io.js" type="text/javascript"></script>
 <script>
   var socket = io();
   
+  //change the socket io stock code
   var messages = document.getElementById('messages');
   var form = document.getElementById('form');
   var input = document.getElementById('input');
+  var messageList = []
 
 
   socket.on('chat message', function(msg) {
     console.log('pls')
     var item = document.createElement('li');
     item.textContent = msg;
+    item.className = "r";
     messages.appendChild(item);
+    messageList.push(item)
+    console.log(messageList)
     window.scrollTo(0, document.body.scrollHeight);
   });
 
   socket.on('prev_messages', function(msg) {
-    console.log(msg.Items[0].message.S)
-    msg.Items.forEach(x => {
+    console.log(msg)
+    msg[0].Items.forEach(x => {
       var item = document.createElement('li');
+      if(x.author.S == msg[1].user) {
+        item.className = "r";
+      }
       item.textContent = x.message.S;
       messages.appendChild(item);
+      messageList.push(item)
       window.scrollTo(0, document.body.scrollHeight);
+    })
+    
+  });
+
+  socket.on('refr', function(msg) {
+    var newMessage = true;
+    console.log(msg)
+    msg[0].Items.forEach(x => {
+
+      var item = document.createElement('li');
+      if(x.author.S == msg[1].user) {
+        item.className = "r";
+      }   
+      item.textContent = x.message.S;
+
+      for (var i = 0; i < messageList.length; i++) {
+        if(messageList[i].textContent == item.textContent && messageList[i].className == item.className) {
+          newMessage = false;
+        }
+      }
+      if (newMessage) {
+        console.log("new message")
+        messages.appendChild(item);
+        messageList.push(item);
+      }
+      newMessage = true;  
     })
     
   });
@@ -138,7 +178,13 @@
     }
   });
   
-  console.log("c")
+
+  setInterval(function() {
+    console.log("refresh")
+    socket.emit('refresh', 0);
+  }, 2000);
+
+
 
   
 </script>
