@@ -1,8 +1,10 @@
 const express = require('express');
 const sessions = require('express-session');
 const routes = require('./routes/routes.js');
-//const socket = require('socket.io') (http)
 var app = express();
+
+const http = require("http").createServer(app);
+const io = require("socket.io")(http);
 
 app.use(express.urlencoded());
 app.use(sessions({
@@ -23,6 +25,17 @@ app.get("/chat", routes.chat);
 app.post("/makepost", routes.make_post);
 app.post("/getposts", routes.get_posts);
 app.get("/wall", routes.render_wall);
+io.on('connection', routes.io_on);
+
+
+
+
+
+
 
 console.log('Authors: Christian Sun, Belinda Xi, William Fan, Kishen Sivabalan');
-app.listen(8080, () => console.log("HTTP server started on port 8080!"));
+http.listen(8080, () => console.log("HTTP server started on port 8080!"));
+
+
+
+

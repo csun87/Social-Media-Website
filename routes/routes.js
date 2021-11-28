@@ -98,15 +98,6 @@ const signout = function(req, res) {
   res.redirect("/");
 }
 
-const chat = function(req, res) {
-  //if (!req.session.username) {
-    //res.redirect("/")
-  //}
-
-  res.render("chat.ejs")
-
-}
-
 const makePost = function(req, res) {
   if (req.session.username) {
     db.make_post(req.session.username, req.body.content, function(err, data) {
@@ -188,6 +179,25 @@ const getPosts = function(req, res) {
   }
 }
 
+
+
+
+//SOCKET IO ROUTES
+
+const chat = function(req, res) {
+  //if (!req.session.username) {
+    //res.redirect("/")
+  //}
+
+  res.render("chat.ejs")
+}
+
+const io_on = function(req, res) {
+  console.log('a user connected');
+}
+
+
+
 const routes = {
   get_login_page: renderLogin,
   check_login: checkLogin,
@@ -198,7 +208,8 @@ const routes = {
   chat : chat,
   make_post: makePost,
   get_posts: getPosts,
-  render_wall: renderWall
+  render_wall: renderWall,
+  io_on : io_on
 };
 
 module.exports = routes;
