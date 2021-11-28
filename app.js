@@ -1,5 +1,6 @@
 const express = require('express');
 const sessions = require('express-session');
+const database = require('./models/database.js');
 const routes = require('./routes/routes.js');
 var app = express();
 
@@ -26,6 +27,33 @@ app.post("/makepost", routes.make_post);
 app.post("/getposts", routes.get_posts);
 app.get("/wall", routes.render_wall);
 io.on('connection', routes.io_on);
+
+
+
+
+//Im doing the socket stuff here first because I havent figured out how to move it to routes im sorry christian 
+
+
+/*io.on("connection", function(socket) {
+   console.log('a user connected');
+   db.getMessage(0, function(err,data) {
+   if(err) {
+      console.log(err)
+   } else {
+      console.log(data);
+      socket.emit('chat message', data);
+   }
+
+   })
+  
+  socket.emit('chat message', "Hello");
+
+  socket.on("test", arg => {
+   console.log("message received")
+   socket.emit('chat message', arg);
+ });
+});*/
+
 
 
 

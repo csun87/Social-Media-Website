@@ -90,81 +90,6 @@ const changeAffiliation = function(username, newAffiliation, callback) {
   });
 }
 
-// MESSAGE FUNCTIONS
-
-const addMessage = function(id, timestamp, author, message) {
-  const params = {
-    TableName: "messages",
-    Item: {
-      "groupid": {
-        "N": id
-      },
-      "timestamp": {
-        "S": timestamp
-      },
-      "author": {
-        "S": author
-      },
-      "message": {
-        "S": message
-      }
-    }
-  }
-  db.putItem(params, function(err, data) {
-    if (err) {
-      callback(err);
-    } else {
-      callback(null, "Message successfully created");
-    }
-  });
-}
-
-
-const deleteMessage = function(id, timestamp, author, message) {
-  const params = {
-    TableName: "messages",
-    Item: {
-      "groupid": {
-        "N": id
-      },
-      "timestamp": {
-        "S": timestamp
-      },
-      "author": {
-        "S": author
-      },
-      "message": {
-        "S": message
-      }
-    }
-  }
-  db.deleteItem(params, function(err, data) {
-    if (err) {
-      callback(err);
-    } else {
-      callback(null, "Message successfully deleted");
-    }
-  });
-}
-
-
-const getMessage = function(id) {
-  const params = {
-    TableName: "messages",
-    Item: {
-      "groupid": {
-        "N": id
-      }
-    }
-  }
-  db.Scan(params, function(err, data) {
-    if (err) {
-      callback(err);
-    } else {
-      callback(null, "Successfully received all messages");
-    }
-  });
-}
 
 // POSTS FUNCTIONS
 
@@ -256,6 +181,81 @@ const addFriend = function(sender, receiver, callback) {
 }
 
 
+//MESSAGES FUNCTIONS
+
+const getAllMessages = function(id, callback) {
+  var params = {
+    TableName: "messages",
+    KeyConditionExpression: "groupid = :groupid",
+    ExpressionAttributeValues: {
+        ':groupid' : {N: String(id)}
+      },
+  };
+
+  db.query(params, function(err, data) {
+    if (err) {
+      callback(err);
+    } else {
+      callback(null, data);
+    }
+  });
+}
+
+const addMessage = function(author, message, callback) {
+  const date = new Date().getTime();
+  const params = {
+    TableName: "messages",
+    Item: {
+      "groupid": {
+        "N": "0"
+      },
+      "timestamp": {
+        "S": date.toString()
+      },
+      "message": {
+        "S": message
+      },
+      "author": {
+        "S": author
+      }
+    }
+  };
+  db.putItem(params, function(err, data) {
+    if (err) {
+      callback(err);
+    } else {
+      callback(null, "Message successfully created");
+    }
+  });
+}
+
+const deleteMessage = function(id, timestamp, author, message) {
+  const params = {
+    TableName: "messages",
+    Item: {
+      "groupid": {
+        "N": id
+      },
+      "timestamp": {
+        "S": timestamp
+      },
+      "author": {
+        "S": author
+      },
+      "message": {
+        "S": message
+      }
+    }
+  }
+  db.deleteItem(params, function(err, data) {
+    if (err) {
+      callback(err);
+    } else {
+      callback(null, "Message successfully deleted");
+    }
+  });
+}
+
 const database = {
   login_lookup: loginLookup,
   add_user: addUser,
@@ -264,7 +264,8 @@ const database = {
   deleteMessage : deleteMessage,
   make_post: makePost,
   get_posts_by_author: getPostsByAuthor,
-  get_friends: getFriends
+  get_friends: getFriends,
+  get_Messages : getAllMessages
 };
 
 module.exports = database;

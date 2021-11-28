@@ -185,16 +185,39 @@ const getPosts = function(req, res) {
 //SOCKET IO ROUTES
 
 const chat = function(req, res) {
-  //if (!req.session.username) {
-    //res.redirect("/")
-  //}
+  res.render("chat.ejs", {})
+   
+};
 
-  res.render("chat.ejs")
-}
-
-const io_on = function(req, res) {
+const io_on = function(socket) {
   console.log('a user connected');
+
+  //Getting all messages on page load
+  db.get_Messages(0, function(err,data) {
+   if(err) {
+      console.log(err)
+   } else {
+      console.log(data);
+      socket.emit('prev_messages', data);
+   }
+
+   })
+
+  //Receiving new message
+  socket.on("test", arg => {
+    db.addMessage("Kishen", arg, function(err,data) {
+      if(err) {
+          console.log(err)
+      } else {
+          console.log(data);
+      }
+    });
+    console.log("message received")
+    socket.emit('chat message', arg);
+  });
 }
+
+
 
 
 
