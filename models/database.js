@@ -256,6 +256,31 @@ const addFriend = function(sender, receiver, callback) {
 }
 
 
+const makeComment = function(author, content, authortime, callback) {
+  const date = new Date().getTime();
+  const params = {
+    TableName: "reactions",
+    Item: {
+      "authortime": {
+        "S": authortime
+      },
+      "timestamp": {
+        "N": date.toString()
+      },
+      "content": {
+        "S": content
+      },
+      "author": {
+        "S": author
+      }
+    }
+  };
+  db.putItem(params, function(err, data) {
+    callback(err, data);
+  });
+}
+
+
 const database = {
   login_lookup: loginLookup,
   add_user: addUser,
@@ -264,7 +289,8 @@ const database = {
   deleteMessage : deleteMessage,
   make_post: makePost,
   get_posts_by_author: getPostsByAuthor,
-  get_friends: getFriends
+  get_friends: getFriends,
+  make_comment: makeComment,
 };
 
 module.exports = database;

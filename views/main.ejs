@@ -47,12 +47,37 @@
       </form>
     </div>
     <div id="posts" class="container">
-      
+
+
+
     </div>
   </body>
   <script>
+
+      function submitComment(event) {
+          event.preventDefault();
+          var s = String(event.target.id).substring(1);
+          const data = {
+            content : document.getElementById(s).value,
+            authortime : s
+          }
+          if (data.content.length == 0) {
+            alert("You cannot make an empty comment");
+          } else {
+            $.post("/makecomment", data, function(x) {
+              if (x.success) {
+                window.location.assign("/feed");
+              } else {
+                alert(x.msg);
+              }
+            });
+          }
+          
+      }
+
     $(document).ready(function() {
       $.post("/getposts", {}, function(out) {
+        
         const posts = []
         out.data.forEach(function(x) {
           x.forEach(function(y) {
@@ -62,12 +87,77 @@
         posts.sort(function(x, y) {
           return x.timestamp - y.timestamp;
         });
+        
         posts.forEach(function(post) {
+          var p = post.author + "$" + post.timestamp;
           const date = new Date(post.timestamp);
           $("#posts").append('<div class="card" style="width: 18rem;"><div class="card-body"><h5 class="card-title">' + post.author + 
             '</h5><h6 class="card-subtitle mb-2 text-muted">' + date.toString() + 
               '</h6><p class="card-text">' + post.content + 
                 '</p></div>' + '</div>');
+
+        
+        const data = {
+          authortime : p
+        }
+
+        var $comms = "";
+        $.post("/getcomments", data, function(out) {
+          
+          const comments = [];
+          out.data.forEach(function(x) {
+            x.forEach(function(y) {
+              comments.push(y);
+            });
+          });
+          console.log(comments);
+          comments.forEach(function(comment) {
+            var a = comment.author;
+            var c = comment.content;
+            var $comm = $('<h5>' +  a + ': ' + c + '</h5>');
+            $('#posts').append($comm);
+          });
+          
+
+
+        });
+
+          
+          
+          
+
+          
+
+
+          
+          
+
+          var $commentForm = $(
+                '<div id="post-box" style="width: 80%; height: 80%; align-self: center;" onsubmit="submitComment(event)">'
+              //+ '<form id="make-comment-form">'  
+              + '<form id="f' + p + '">'  
+              + '<div class="form-group">'
+              //+ '<input id="make-comment-text" type="text" class="form-control" id="make-comment-text" placeholder="Enter comment">'
+              + '<input id="' + p
+              + '" type="text" class="form-control" id="make-comment-text" placeholder="Enter comment">'
+              + '</div>'
+              + '<input id="make-comment-button" type="submit" class="btn btn-primary" value="Post comment">'
+              + '</form>'
+              + '</div>'
+          );
+
+        
+
+          $("#posts").append($commentForm);
+               // + '<div id="post-box" style="width: 80%; height: 80%; align-self: center;">'
+               // + '<form id="make-comment-form">'  
+               // + '<div class="form-group">'
+               // + '<input id="make-comment-text" type="text" class="form-control" id="make-comment-text" placeholder="Write a comment here">'
+                // + '</div>'
+                // + '<input id="make-comment-button" type="submit" class="btn btn-primary" value="Post comment">'
+                // + '</form>'
+                // + '</div>'
+                // );
         });
       });
       $("#make-post-form").submit(function(event) {
@@ -87,6 +177,10 @@
           });
         }
       });
+
+      
+
+
     });
   </script>
 </html>
