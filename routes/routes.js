@@ -185,39 +185,51 @@ const getPosts = function(req, res) {
 //SOCKET IO ROUTES
 
 const chat = function(req, res) {
-  res.render("chat.ejs", {})
-   
+
+  if(!req.session.username) {
+    res.redirect('/');
+  } else {
+    res.render("chat.ejs", {});
+  }
+  
 };
 
 const io_on = function(socket) {
   console.log('a user connected');
+
+  console.log(socket.handshake.session);
 
   //Getting all messages on page load
   db.get_Messages(0, function(err,data) {
    if(err) {
       console.log(err)
    } else {
-      console.log(data);
+      //console.log(data);
       var send = []
 
-      var username = {
-        user : "Kishen"
+      var moreData = {
+        user : socket.handshake.session.username,
+        rooms : [0,1,7],
+        currentRoom : 0
       }
       send.push(data);
-      send.push(username)
-      console.log(send)
+      send.push(moreData)
+      //console.log(send)
       socket.emit('prev_messages', send);
+
+      socket.emit('chat')
    }
 
    })
 
   //Receiving new message
   socket.on("test", arg => {
-    db.addMessage("Kishen", arg, function(err,data) {
+    console.log(socket.handshake.session.username);
+    db.addMessage(socket.handshake.session.username, arg.room, arg.message, function(err,data) {
       if(err) {
           console.log(err)
       } else {
-          console.log(data);
+          //console.log(data);
       }
     });
     console.log("message received");
@@ -228,24 +240,48 @@ const io_on = function(socket) {
   socket.on("refresh", arg => {
     console.log("Refreshing");
 
-    db.get_Messages(0, function(err,data) {
+    db.get_Messages(arg, function(err,data) {
       if(err) {
          console.log(err)
       } else {
-         console.log(data);
+         //console.log(data);
          var send = []
    
          var username = {
-           user : "Kishen"
+           user : socket.handshake.session.username
          }
          send.push(data);
          send.push(username)
-         console.log(send)
+         //console.log(send)
          socket.emit('refr', send);
       }
    
       });
   });
+
+  socket.on("change room", arg => {
+    db.get_Messages(arg, function(err,data) {
+      if(err) {
+         console.log(err)
+      } else {
+         //console.log(data);
+         var send = []
+   
+         var moreData = {
+           user : socket.handshake.session.username,
+           rooms : [0,1,7],
+           currentRoom : arg
+         }
+         send.push(data);
+         send.push(moreData)
+         //console.log(send)
+         socket.emit('prev_messages', send);
+
+        }
+      })
+    
+
+  })
 
 }
 

@@ -54,6 +54,12 @@ const addUser = function(username, password, firstname, lastname, email, affilia
       "interests": {
         "SS": interests
       }
+      /*,
+      "chats": {
+        "L": [ 
+          {"N": "1"} , {"N": "2"}, {"N": "7"}
+        ]
+      }*/
     },
     ReturnValues: "NONE"
   }
@@ -201,13 +207,13 @@ const getAllMessages = function(id, callback) {
   });
 }
 
-const addMessage = function(author, message, callback) {
+const addMessage = function(author, groupId, message, callback) {
   const date = new Date().getTime();
   const params = {
     TableName: "messages",
     Item: {
       "groupid": {
-        "N": "0"
+        "N": String(groupId)
       },
       "timestamp": {
         "S": date.toString()

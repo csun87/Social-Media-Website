@@ -80,7 +80,9 @@
 
 
   <div class="col-lg-6 col-sm-12 left">
-    
+    <ul class = "roomList" id = "rooms">
+
+    </ul>
   </div>
 
   <div id = "chat-right" class="col-lg-6 col-sm-12 right">
@@ -112,13 +114,15 @@
   var messages = document.getElementById('messages');
   var form = document.getElementById('form');
   var input = document.getElementById('input');
+  var rooms = document.getElementById('rooms');
   var messageList = []
-
+  var roomList = []
+  var currentRoom
 
   socket.on('chat message', function(msg) {
-    console.log('pls')
+    console.log(msg)
     var item = document.createElement('li');
-    item.textContent = msg;
+    item.textContent = msg.message;
     item.className = "r";
     messages.appendChild(item);
     messageList.push(item)
@@ -127,6 +131,11 @@
   });
 
   socket.on('prev_messages', function(msg) {
+    messages.innerHTML = "";
+    rooms.innerHTML = "";
+    messageList = [];
+    roomList = [];
+    console.log("Prev")
     console.log(msg)
     msg[0].Items.forEach(x => {
       var item = document.createElement('li');
@@ -138,6 +147,17 @@
       messageList.push(item)
       window.scrollTo(0, document.body.scrollHeight);
     })
+
+    msg[1].rooms.forEach( x => {
+      var item = document.createElement('li');
+      item.innerHTML += '<input id="roomBtn" type="button" value='+ x + ' onclick="changeRoom('+x+')" />'
+      rooms.appendChild(item);
+      roomList.push(item);
+    })
+
+    currentRoom = msg[1].currentRoom;
+
+
     
   });
 
@@ -173,15 +193,30 @@
     e.preventDefault();
     if (input.value) {
       console.log("werb")
-      socket.emit('test', input.value);
+
+      var send = {
+        message : input.value,
+        room : currentRoom
+      }
+      socket.emit('test', send);
       input.value = '';
     }
   });
+
+  function changeRoom(e) {
+
+    if (e != currentRoom) {
+      socket.emit("change room", e)
+    }
+    
+
+
+  }
   
 
   setInterval(function() {
     console.log("refresh")
-    socket.emit('refresh', 0);
+    socket.emit('refresh', currentRoom);
   }, 2000);
 
 

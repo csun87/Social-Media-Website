@@ -4,16 +4,24 @@ const database = require('./models/database.js');
 const routes = require('./routes/routes.js');
 var app = express();
 
-const http = require("http").createServer(app);
-const io = require("socket.io")(http);
-
 app.use(express.urlencoded());
-app.use(sessions({
+
+var session = sessions({
    secret: 'ajxkciwjio2oSIFKcjSKWO*@#kdjC)Sk2jSkco',
    resave: false,
    saveUninitialized: true,
    cookie: {}
+})
+app.use(session);
+
+socketSession = require("express-socket.io-session");
+const http = require("http").createServer(app);
+const io = require("socket.io")(http);
+
+io.use(socketSession(session, {
+   autoSave:true
 }));
+
 
 app.get("/", routes.get_login_page);
 app.get("/login", routes.get_login_page);
@@ -27,6 +35,7 @@ app.post("/makepost", routes.make_post);
 app.post("/getposts", routes.get_posts);
 app.get("/wall", routes.render_wall);
 io.on('connection', routes.io_on);
+
 
 
 
