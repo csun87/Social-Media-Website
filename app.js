@@ -1,16 +1,27 @@
 const express = require('express');
 const sessions = require('express-session');
+const database = require('./models/database.js');
 const routes = require('./routes/routes.js');
-//const socket = require('socket.io') (http)
 var app = express();
 
 app.use(express.urlencoded());
-app.use(sessions({
+
+var session = sessions({
    secret: 'ajxkciwjio2oSIFKcjSKWO*@#kdjC)Sk2jSkco',
    resave: false,
    saveUninitialized: true,
    cookie: {}
+})
+app.use(session);
+
+socketSession = require("express-socket.io-session");
+const http = require("http").createServer(app);
+const io = require("socket.io")(http);
+
+io.use(socketSession(session, {
+   autoSave:true
 }));
+
 
 app.get("/", routes.get_login_page);
 app.get("/login", routes.get_login_page);
@@ -27,4 +38,8 @@ app.post("/makecomment", routes.make_comment);
 app.post("/getcomments", routes.get_comments);
 
 console.log('Authors: Christian Sun, Belinda Xi, William Fan, Kishen Sivabalan');
-app.listen(8080, () => console.log("HTTP server started on port 8080!"));
+http.listen(8080, () => console.log("HTTP server started on port 8080!"));
+
+
+
+

@@ -98,15 +98,6 @@ const signout = function(req, res) {
   res.redirect("/");
 }
 
-const chat = function(req, res) {
-  //if (!req.session.username) {
-    //res.redirect("/")
-  //}
-
-  res.render("chat.ejs")
-
-}
-
 const makePost = function(req, res) {
   if (req.session.username) {
     db.make_post(req.session.username, req.body.content, function(err, data) {
@@ -188,114 +179,115 @@ const getPosts = function(req, res) {
   }
 }
 
-const makeComment = function(req, res) {
-  if (req.session.username) {
-    db.make_comment(req.session.username, req.body.content, req.body.authortime, function(err, data) {
-      if (err) {
-        return res.send({
-          success: false,
-          msg: "Unsuccessful"
-        });
+
+
+
+//SOCKET IO ROUTES
+
+const chat = function(req, res) {
+
+  if(!req.session.username) {
+    res.redirect('/');
+  } else {
+    res.render("chat.ejs", {});
+  }
+  
+};
+
+const io_on = function(socket) {
+  console.log('a user connected');
+
+  console.log(socket.handshake.session);
+
+  //Getting all messages on page load
+  db.get_Messages(0, function(err,data) {
+   if(err) {
+      console.log(err)
+   } else {
+      //console.log(data);
+      var send = []
+
+      var moreData = {
+        user : socket.handshake.session.username,
+        rooms : [0,1,7],
+        currentRoom : 0
+      }
+      send.push(data);
+      send.push(moreData)
+      //console.log(send)
+      socket.emit('prev_messages', send);
+
+      socket.emit('chat')
+   }
+
+   })
+
+  //Receiving new message
+  socket.on("test", arg => {
+    console.log(socket.handshake.session.username);
+    db.addMessage(socket.handshake.session.username, arg.room, arg.message, function(err,data) {
+      if(err) {
+          console.log(err)
       } else {
-        return res.send({
-          success: true,
-          msg: null
-        });
+          //console.log(data);
       }
     });
-  } else {
-    res.redirect("/");
-  }
+    console.log("message received");
+    socket.emit('chat message', arg);
+  });
+
+  //Refreshing the page
+  socket.on("refresh", arg => {
+    console.log("Refreshing");
+
+    db.get_Messages(arg, function(err,data) {
+      if(err) {
+         console.log(err)
+      } else {
+         //console.log(data);
+         var send = []
+   
+         var username = {
+           user : socket.handshake.session.username
+         }
+         send.push(data);
+         send.push(username)
+         //console.log(send)
+         socket.emit('refr', send);
+      }
+   
+      });
+  });
+
+  socket.on("change room", arg => {
+    db.get_Messages(arg, function(err,data) {
+      if(err) {
+         console.log(err)
+      } else {
+         //console.log(data);
+         var send = []
+   
+         var moreData = {
+           user : socket.handshake.session.username,
+           rooms : [0,1,7],
+           currentRoom : arg
+         }
+         send.push(data);
+         send.push(moreData)
+         //console.log(send)
+         socket.emit('prev_messages', send);
+
+        }
+      })
+    
+
+  })
+
 }
 
-// const getComments = function(req, res) {
-//   if (req.session.username) {
-//     //console.log("AUTHORTIME: " + req.body.authortime);
-//     var docClient = new AWS.DynamoDB.DocumentClient();
-//     const promises = [];
-//     const temp = {
-//       TableName: "reactions",
-//       KeyConditionExpression: "authortime = :x",
-//       ExpressionAttributeValues: {
-//         ":x": req.body.authortime
-//       }
-//     };
-//     docClient.query(temp, function(err, data) {
-//       if (err) {
-//         console.log(err);
-//       } else {
-//         return res.send({
-//           success : true,
-//           data : data.Items,
-//           msg: null
-//         });
-//       }
-//     })
-//     // promises.push(docClient.query(temp).promise().then(
-//     //   function(data) {
-//     //     return data.Items;
-//     //   },
-//     //   function(err) {
-//     //     console.error("Unable to query. Error: ", JSON.stringify(err, null, 2));
-//     //   }
-//     // ));
 
-//     // Promise.all(promises).then(function(data) {
-//     //   const comments = [];
-//     //   data.forEach(function(data) {
-//     //     comments.push(data);
-//     //   });
-//     //   return res.send({
-//     //     success: true,
-//     //     data: comments,
-//     //     msg: null
-//     //   });
-//     // });
 
-    
-//   } else {
-//     res.redirect("/");
-//   }
-// }
 
-const getComments = function(req, res) {
-  if (req.session.username) {
-    //console.log("AUTHORTIME: " + req.body.authortime);
-    var docClient = new AWS.DynamoDB.DocumentClient();
-    const promises = [];
-    const temp = {
-      TableName: "reactions",
-      KeyConditionExpression: "authortime = :x",
-      ExpressionAttributeValues: {
-        ":x": req.body.authortime
-      }
-    };
-    promises.push(docClient.query(temp).promise().then(
-      function(data) {
-        return data.Items;
-      },
-      function(err) {
-        console.error("Unable to query. Error: ", JSON.stringify(err, null, 2));
-      }
-    ));
-
-    Promise.all(promises).then(function(data) {
-      const comments = [];
-      data.forEach(function(data) {
-        comments.push(data);
-      });
-      return res.send({
-        success: true,
-        data: comments,
-        msg: null
-      });
-    });
-
-    
-  } else {
-    res.redirect("/");
-  }
-}
 
 const routes = {
   get_login_page: renderLogin,
@@ -308,8 +300,7 @@ const routes = {
   make_post: makePost,
   get_posts: getPosts,
   render_wall: renderWall,
-  make_comment: makeComment,
-  get_comments : getComments,
+  io_on : io_on
 };
 
 module.exports = routes;

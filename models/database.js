@@ -54,6 +54,12 @@ const addUser = function(username, password, firstname, lastname, email, affilia
       "interests": {
         "SS": interests
       }
+      /*,
+      "chats": {
+        "L": [ 
+          {"N": "1"} , {"N": "2"}, {"N": "7"}
+        ]
+      }*/
     },
     ReturnValues: "NONE"
   }
@@ -90,81 +96,6 @@ const changeAffiliation = function(username, newAffiliation, callback) {
   });
 }
 
-// MESSAGE FUNCTIONS
-
-const addMessage = function(id, timestamp, author, message) {
-  const params = {
-    TableName: "messages",
-    Item: {
-      "groupid": {
-        "N": id
-      },
-      "timestamp": {
-        "S": timestamp
-      },
-      "author": {
-        "S": author
-      },
-      "message": {
-        "S": message
-      }
-    }
-  }
-  db.putItem(params, function(err, data) {
-    if (err) {
-      callback(err);
-    } else {
-      callback(null, "Message successfully created");
-    }
-  });
-}
-
-
-const deleteMessage = function(id, timestamp, author, message) {
-  const params = {
-    TableName: "messages",
-    Item: {
-      "groupid": {
-        "N": id
-      },
-      "timestamp": {
-        "S": timestamp
-      },
-      "author": {
-        "S": author
-      },
-      "message": {
-        "S": message
-      }
-    }
-  }
-  db.deleteItem(params, function(err, data) {
-    if (err) {
-      callback(err);
-    } else {
-      callback(null, "Message successfully deleted");
-    }
-  });
-}
-
-
-const getMessage = function(id) {
-  const params = {
-    TableName: "messages",
-    Item: {
-      "groupid": {
-        "N": id
-      }
-    }
-  }
-  db.Scan(params, function(err, data) {
-    if (err) {
-      callback(err);
-    } else {
-      callback(null, "Successfully received all messages");
-    }
-  });
-}
 
 // POSTS FUNCTIONS
 
@@ -256,19 +187,39 @@ const addFriend = function(sender, receiver, callback) {
 }
 
 
-const makeComment = function(author, content, authortime, callback) {
+//MESSAGES FUNCTIONS
+
+const getAllMessages = function(id, callback) {
+  var params = {
+    TableName: "messages",
+    KeyConditionExpression: "groupid = :groupid",
+    ExpressionAttributeValues: {
+        ':groupid' : {N: String(id)}
+      },
+  };
+
+  db.query(params, function(err, data) {
+    if (err) {
+      callback(err);
+    } else {
+      callback(null, data);
+    }
+  });
+}
+
+const addMessage = function(author, groupId, message, callback) {
   const date = new Date().getTime();
   const params = {
-    TableName: "reactions",
+    TableName: "messages",
     Item: {
-      "authortime": {
-        "S": authortime
+      "groupid": {
+        "N": String(groupId)
       },
       "timestamp": {
-        "N": date.toString()
+        "S": date.toString()
       },
-      "content": {
-        "S": content
+      "message": {
+        "S": message
       },
       "author": {
         "S": author
@@ -276,10 +227,40 @@ const makeComment = function(author, content, authortime, callback) {
     }
   };
   db.putItem(params, function(err, data) {
-    callback(err, data);
+    if (err) {
+      callback(err);
+    } else {
+      callback(null, "Message successfully created");
+    }
   });
 }
 
+const deleteMessage = function(id, timestamp, author, message) {
+  const params = {
+    TableName: "messages",
+    Item: {
+      "groupid": {
+        "N": id
+      },
+      "timestamp": {
+        "S": timestamp
+      },
+      "author": {
+        "S": author
+      },
+      "message": {
+        "S": message
+      }
+    }
+  }
+  db.deleteItem(params, function(err, data) {
+    if (err) {
+      callback(err);
+    } else {
+      callback(null, "Message successfully deleted");
+    }
+  });
+}
 
 const database = {
   login_lookup: loginLookup,
@@ -290,7 +271,7 @@ const database = {
   make_post: makePost,
   get_posts_by_author: getPostsByAuthor,
   get_friends: getFriends,
-  make_comment: makeComment,
+  get_Messages : getAllMessages
 };
 
 module.exports = database;
