@@ -11,10 +11,14 @@ var session = sessions({
    resave: false,
    saveUninitialized: true,
    cookie: {}
-})
+});
 app.use(session);
+app.use(function(req, res, next) {
+   res.locals.username = req.session.username;
+   next();
+})
 
-socketSession = require("express-socket.io-session");
+const socketSession = require("express-socket.io-session");
 const http = require("http").createServer(app);
 const io = require("socket.io")(http);
 
@@ -27,12 +31,14 @@ app.get("/", routes.get_login_page);
 app.get("/login", routes.get_login_page);
 app.get("/signup", routes.get_signup_page);
 app.post("/createaccount", routes.signup_user);
+app.post("/getuser", routes.get_user);
 app.post("/checklogin", routes.check_login);
 app.get("/feed", routes.get_feed);
 app.get("/signout", routes.sign_out);
 app.get("/chat", routes.chat);
 app.post("/makepost", routes.make_post);
 app.post("/getposts", routes.get_posts);
+app.post("/getpostsbyauthor", routes.get_posts_by_author);
 app.get("/wall", routes.render_wall);
 app.post("/makecomment", routes.make_comment);
 app.post("/getcomments", routes.get_comments);

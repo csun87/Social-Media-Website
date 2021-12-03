@@ -16,7 +16,28 @@ const renderSignup = function(req, res) {
 }
 
 const renderWall = function(req, res) {
-  res.render("wall.ejs", {});
+  if (req.session.username) {
+    res.render("wall.ejs", {});
+  } else {
+    res.redirect("/");
+  }
+}
+
+const getUser = function(req, res) {
+  const username = req.body.username;
+  db.login_lookup(username, function(err, data) {
+    if (err) {
+      res.send({
+        success: false,
+        msg: JSON.stringify(err, null, 2)
+      });
+    } else {
+      res.send({
+        success: true,
+        data: data.Items[0]
+      });
+    }
+  });
 }
 
 const checkLogin = function(req, res) {
@@ -74,7 +95,7 @@ const signupUser = function(req, res) {
       if (err) {
         return res.send({
           success: false,
-          msg: JSON.stringify(msg)
+          msg: JSON.stringify(err, null, 2)
         });
       } else {
         return res.send({
@@ -179,7 +200,65 @@ const getPosts = function(req, res) {
   }
 }
 
+const getPostsByAuthor = function(req, res) {
+  if (req.session.username) {
+    db.get_posts_by_author(req.body.author, function(err, data) {
+      if (err) {
+        return res.send({
+          success: false,
+          msg: JSON.stringify(err, null, 2)
+        });
+      } else {
+        return res.send({
+          success: true,
+          data: data.Items
+        });
+      }
+    });
+  } else {
+    res.redirect("/");
+  }
+}
 
+const makeComment = function(req, res) {
+  if (req.session.username) {
+    db.make_comment(req.body.key, req.body.content, req.session.username, function(err, data) {
+      if (err) {
+        return res.send({
+          success: false,
+          msg: JSON.stringify(err, null, 2)
+        });
+      } else {
+        return res.send({
+          success: true,
+          msg: null
+        });
+      }
+    });
+  } else {
+    res.redirect("/");
+  }
+}
+
+const getComments = function(req, res) {
+  if (req.session.username) {
+    db.get_comments(req.body.authortime, function(err, x) {
+      if (err) {
+        return res.send({
+          success: false,
+          msg: JSON.stringify(err, null, 2)
+        });
+      } else {
+        return res.send({
+          success: true,
+          data: x
+        });
+      }
+    });
+  } else {
+    res.redirect("/");
+  }
+}
 
 
 //SOCKET IO ROUTES
@@ -285,12 +364,9 @@ const io_on = function(socket) {
 
 }
 
-
-
-
-
 const routes = {
   get_login_page: renderLogin,
+  get_user: getUser,
   check_login: checkLogin,
   get_signup_page: renderSignup,
   signup_user: signupUser,
@@ -298,7 +374,10 @@ const routes = {
   sign_out: signout,
   chat : chat,
   make_post: makePost,
+  make_comment: makeComment,
+  get_comments: getComments,
   get_posts: getPosts,
+  get_posts_by_author: getPostsByAuthor,
   render_wall: renderWall,
   io_on : io_on
 };

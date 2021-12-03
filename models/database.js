@@ -126,9 +126,10 @@ const makePost = function(author, content, callback) {
 const getPostsByAuthor = function(author, callback) {
   const params = {
     TableName: "posts",
-    Item: {
-      "author": {
-        "S": author
+    KeyConditionExpression: "author = :x",
+    ExpressionAttributeValues: {
+      ":x": {
+        "S" : author
       }
     }
   };
@@ -182,6 +183,45 @@ const addFriend = function(sender, receiver, callback) {
     }
   };
   db.batchWriteItem(params, function(err, data) {
+    callback(err, data);
+  });
+}
+
+// REACTIONS FUNCTIONS
+
+const getComments = function(key, callback) {
+  const params = {
+    TableName: "reactions",
+    KeyConditionExpression: "authortime = :x",
+    ExpressionAttributeValues: {
+      ":x": { "S" : key }
+    }
+  };
+  db.query(params, function(err, data) {
+    callback(err, data);
+  })
+}
+
+const makeComment = function(key, content, author, callback) {
+  const date = new Date().getTime();
+  const params = {
+    TableName: "reactions",
+    Item: {
+      "authortime": {
+        "S": key
+      },
+      "timestamp": {
+        "N": date.toString()
+      },
+      "author": {
+        "S": author
+      },
+      "content": {
+        "S": content
+      }
+    }
+  };
+  db.putItem(params, function(err, data) {
     callback(err, data);
   });
 }
@@ -271,6 +311,8 @@ const database = {
   make_post: makePost,
   get_posts_by_author: getPostsByAuthor,
   get_friends: getFriends,
+  get_comments: getComments,
+  make_comment: makeComment,
   get_Messages : getAllMessages
 };
 
