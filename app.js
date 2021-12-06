@@ -42,9 +42,16 @@ app.post("/getpostsbyauthor", routes.get_posts_by_author);
 app.get("/wall", routes.render_wall);
 app.post("/makecomment", routes.make_comment);
 app.post("/getcomments", routes.get_comments);
+app.get("/settings", routes.get_settings);
+app.post("/changeemail", routes.change_email);
+app.post("/changepassword", routes.change_password);
+app.post("/changeaffiliation", routes.change_affiliation);
+app.post("/changeinterests", routes.change_interests);
+app.get("/search", routes.get_search);
+app.post("/searchscan", routes.search_scan);
 
 console.log('Authors: Christian Sun, Belinda Xi, William Fan, Kishen Sivabalan');
-http.listen(8080, () => console.log("HTTP server started on port 8080!"));
+http.listen(8080, () => console.log("HTTP server started on port 8080! Go to http://localhost:8080"));
 
 
 

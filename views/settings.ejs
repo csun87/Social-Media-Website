@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Settings</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+  </head>
+  <body>
+    <div>
+      <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <span class="navbar-brand" href="#" style="padding-left: 10px">PennBook</span>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul class="navbar-nav mr-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="/feed">Feed</a>
+            </li>
+            <li class="nav-item disabled">
+              <a id ="wall-nav-bar" class="nav-link" href="/wall">Wall</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/chat">Chat</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#">Visualizer</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/settings">Settings</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/search">Search</a>
+            </li>
+          </ul>
+          <ul class="navbar-nav my-2 my-lg-0">
+            <li class="nav-item active">
+              <a class="nav-link" href="/signout">Sign Out</a>
+            </li>
+          </ul>
+        </div>
+      </nav>
+    </div>
+    <div id="current-info"></div>
+    <div id="change-settings">
+        <form id="change-email">
+            <div class="form-group">
+                <label for="new-email">Enter New Email</label>
+                <input type="email" class="form-control" id="new-email" placeholder="Enter new email">
+            </div>
+            <input type="submit" class="btn btn-primary" value="Change Email">
+        </form>
+        <form id="change-password">
+            <div class="form-group">
+                <label for="new-password">Enter New Password</label>
+                <input type="password" class="form-control" id="new-password" placeholder="Enter new password">
+            </div>
+            <input type="submit" class="btn btn-primary" value="Change Password">
+        </form>
+        <form id="change-affiliation">
+            <div class="form-group">
+                <label for="new-affiliation">Enter New Affiliation</label>
+                <input type="text" class="form-control" id="new-affiliation" placeholder="Enter new affiliation">
+            </div>
+            <input type="submit" class="btn btn-primary" value="Change Affiliation">
+        </form>
+        <form id="change-interests">
+            <div class="form-group">
+                <label for="interests">Interests:</label>
+                <select multiple class="form-control" id="interests" name="interests">
+                    <option>POLITICS</option>
+                    <option>WELLNESS</option>
+                    <option>ENTERTAINMENT</option>
+                    <option>TRAVEL</option>
+                    <option>STYLE & BEAUTY</option>
+                    <option>PARENTING</option>
+                    <option>HEALTHY LIVING</option>
+                    <option>QUEER VOICES</option>
+                    <option>FOOD & DRINK</option>
+                    <option>BUSINESS</option>
+                    <option>COMEDY</option>
+                    <option>SPORTS</option>
+                    <option>BLACK VOICES</option>
+                    <option>HOME & LIVING</option>
+                    <option>PARENTS</option>
+                    <option>THE WORLDPOST</option>
+                    <option>WEDDINGS</option>
+                    <option>WOMEN</option>
+                    <option>IMPACT</option>
+                    <option>DIVORCE</option>
+                    <option>CRIME</option>
+                    <option>MEDIA</option>
+                    <option>WEIRD NEWS</option>
+                    <option>GREEN</option>
+                    <option>WORLDPOST</option>
+                    <option>RELIGION</option>
+                    <option>STYLE</option>
+                    <option>SCIENCE</option>
+                    <option>WORLD NEWS</option>
+                    <option>TASTE</option>
+                    <option>TECH</option>
+                    <option>MONEY</option>
+                    <option>ARTS</option>
+                    <option>FIFTY</option>
+                    <option>GOOD NEWS</option>
+                    <option>ARTS & CULTURE</option>
+                    <option>ENVIRONMENT</option>
+                    <option>COLLEGE</option>
+                    <option>LATINO VOICES</option>
+                    <option>CULTURE & ARTS</option>
+                    <option>EDUCATION</option>
+                </select>
+            </div>
+            <input type="submit" class="btn btn-primary" value="Change Interests">
+        </form>
+    </div>
+  </body>
+  <script>
+    const user = "<%= username %>";
+    $(document).ready(function() {
+        $("#current-info").append("<h1>" + user + "'s Settings</h1>");
+
+        $("#change-email").submit(function(event) {
+            event.preventDefault();
+            const data = {
+                newEmail: document.getElementById("new-email").value 
+            };
+            if (data.newEmail.length === 0) {
+                alert("You cannot change to an empty email");
+            } else {
+                $.post("/changeemail", data, function(x) {
+                    if (x.success) {
+                        document.getElementById("new-email").value = "";
+                        alert("Successfully changed email!");
+                    } else {
+                        alert(x.msg);
+                    }
+                });
+            }
+        });
+
+        $("#change-password").submit(function(event) {
+            event.preventDefault();
+            const data = {
+                newPassword: document.getElementById("new-password").value 
+            };
+            if (data.newPassword.length === 0) {
+                alert("You cannot change to an empty password");
+            } else {
+                $.post("/changepassword", data, function(x) {
+                    if (x.success) {
+                        document.getElementById("new-password").value = "";
+                        alert("Successfully changed password!");
+                    } else {
+                        alert(x.msg);
+                    }
+                });
+            }
+        });
+
+        $("#change-affiliation").submit(function(event) {
+            event.preventDefault();
+            const data = {
+                newAffiliation: document.getElementById("new-affiliation").value 
+            };
+            if (data.newAffiliation.length === 0) {
+                alert("You cannot change to an empty affiliation");
+            } else {
+                $.post("/changeaffiliation", data, function(x) {
+                    if (x.success) {
+                        document.getElementById("new-affilitation").value = "";
+                        alert("Successfully changed affiliation!");
+                    } else {
+                        alert(x.msg);
+                    }
+                });
+            }
+        });
+
+        $("#change-interests").submit(function(event) {
+            event.preventDefault();
+            const data = {
+                newInterests: $("#interests").val() 
+            };
+            if (data.newInterests.length < 2) {
+                alert("You must have at least two interests.");
+            } else {
+                $.post("/changeinterests", data, function(x) {
+                    if (x.success) {
+                        alert("Successfully changed interests!");
+                    } else {
+                        alert(x.msg);
+                    }
+                });
+            }
+        });
+    });
+  </script>
+</html>

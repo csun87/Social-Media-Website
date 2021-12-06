@@ -112,6 +112,107 @@ const signupUser = function(req, res) {
   }
 }
 
+const changeEmail = function(req, res) {
+  if (!req.session.username) {
+    res.redirect("/");
+    return;
+  }
+  db.update_email(req.session.username, req.body.newEmail, function(err, data) {
+    if (err) {
+      return res.send({
+        success: false,
+        msg: "Unsuccessful"
+      });
+    } else {
+      return res.send({
+        success: true,
+        msg: null
+      });
+    }
+  });
+}
+
+const changePassword = function(req, res) {
+  if (!req.session.username) {
+    res.redirect("/");
+    return;
+  }
+  const hashed = crypto.createHash("sha256").update(req.body.newPassword).digest("hex");
+  db.update_password(req.session.username, hashed, function(err, data) {
+    if (err) {
+      res.send({
+        success: false,
+        msg: "Unsuccessful"
+      });
+    } else {
+      res.send({
+        success: true,
+        msg: null
+      });
+    }
+  });
+}
+
+const changeAffiliation = function(req, res) {
+  if (!req.session.username) {
+    res.redirect("/");
+    return;
+  }
+  db.update_affiliation(req.session.username, req.body.newAffiliation, function(err, data) {
+    if (err) {
+      res.send({
+        success: false,
+        msg: "Unsuccessful"
+      });
+    } else {
+      res.send({
+        success: true,
+        msg: null
+      });
+    }
+  });
+}
+
+const changeInterests = function(req, res) {
+  if (!req.session.username) {
+    res.redirect("/");
+    return;
+  }
+  db.update_interests(req.session.username, req.body.newInterests, function(err, data) {
+    if (err) {
+      res.send({
+        success: false,
+        msg: "Unsuccessful"
+      });
+    } else {
+      res.send({
+        success: true,
+        msg: null
+      });
+    }
+  });
+}
+
+const searchScan = function(req, res) {
+  if (!req.session.username) {
+    res.redirect("/");
+    return;
+  }
+  db.search_scan(req.body.text, function(err, data) {
+    if (err) {
+      res.send({
+        success: false,
+        msg: "Unsuccessful"
+      });
+    } else {
+      res.send({
+        success: true,
+        data: data
+      });
+    }
+  });
+}
+
 const signout = function(req, res) {
   if (req.session.username) {
     delete req.session.username;
@@ -364,12 +465,36 @@ const io_on = function(socket) {
 
 }
 
+// SETTINGS ROUTES
+
+const getSettings = function(req, res) {
+  if (req.session.username) {
+    res.render("settings.ejs", {});
+  } else {
+    res.redirect("/");
+  }
+}
+
+// SEARCH ROUTES
+
+const getSearch = function(req, res) {
+  if (req.session.username) {
+    res.render("search.ejs", {});
+  } else {
+    res.redirect("/");
+  }
+}
+
 const routes = {
   get_login_page: renderLogin,
   get_user: getUser,
   check_login: checkLogin,
   get_signup_page: renderSignup,
   signup_user: signupUser,
+  change_email: changeEmail,
+  change_password: changePassword,
+  change_affiliation: changeAffiliation,
+  change_interests: changeInterests,
   get_feed: getFeed,
   sign_out: signout,
   chat : chat,
@@ -379,7 +504,10 @@ const routes = {
   get_posts: getPosts,
   get_posts_by_author: getPostsByAuthor,
   render_wall: renderWall,
-  io_on : io_on
+  io_on : io_on,
+  get_settings: getSettings,
+  get_search: getSearch,
+  search_scan: searchScan
 };
 
 module.exports = routes;

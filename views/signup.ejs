@@ -139,11 +139,17 @@
   $(document).ready(function() {
           $("#signupform").submit(function(event) {
               event.preventDefault();
+              var firstname = document.getElementById("firstname").value;
+              firstname = firstname.toLowerCase();
+              firstname = firstname.charAt(0).toUpperCase() + firstname.slice(1);
+              var lastname = document.getElementById("lastname").value
+              lastname = lastname.toLowerCase();
+              lastname = lastname.charAt(0).toUpperCase() + lastname.slice(1);
               const data = {
                   username: document.getElementById("username").value,
                   password: document.getElementById("password").value,
-                  firstname: document.getElementById("firstname").value,
-                  lastname: document.getElementById("lastname").value,
+                  firstname: firstname,
+                  lastname: lastname,
                   email: document.getElementById("email").value,
                   affiliation: document.getElementById("affiliation").value,
                   birthday: document.getElementById("birthday").value,

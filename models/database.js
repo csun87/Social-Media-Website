@@ -81,7 +81,7 @@ const changeAffiliation = function(username, newAffiliation, callback) {
       }
     },
     UpdateExpression: "set affiliation = :x",
-    ExpressionAttributeNames: {
+    ExpressionAttributeValues: {
       ":x": {
         "S": newAffiliation
       }
@@ -93,6 +93,93 @@ const changeAffiliation = function(username, newAffiliation, callback) {
     } else {
       callback(null, "Successfully updated database");
     }
+  });
+}
+
+const changeEmail = function(username, newEmail, callback) {
+  const params = {
+    TableName: "users",
+    Key: {
+      "username": {
+        "S": username
+      }
+    },
+    UpdateExpression: "set email = :x",
+    ExpressionAttributeValues: {
+      ":x": {
+        "S": newEmail
+      }
+    }
+  };
+  db.updateItem(params, function(err, data) {
+    callback(err, data);
+  });
+}
+
+const changePassword = function(username, newPassword, callback) {
+  const params = {
+    TableName: "users",
+    Key: {
+      "username": {
+        "S": username
+      }
+    },
+    UpdateExpression: "set password = :x",
+    ExpressionAttributeValues: {
+      ":x": {
+        "S": newPassword
+      }
+    }
+  };
+  db.updateItem(params, function(err, data) {
+    callback(err, data);
+  });
+}
+
+const changeInterests = function(username, interests, callback) {
+  const params = {
+    TableName: "users",
+    Key: {
+      "username": {
+        "S": username
+      }
+    },
+    UpdateExpression: "set interests = :x",
+    ExpressionAttributeValues: {
+      ":x": {
+        "SS": interests
+      }
+    }
+  };
+  db.updateItem(params, function(err, data) {
+    callback(err, data);
+  });
+}
+
+const searchScan = function(text, callback) {
+  const split = text.split(" ");
+  var firstname = split[0].toLowerCase();
+  var lastname = "";
+  firstname = firstname.charAt(0).toUpperCase() + firstname.slice(1);
+  if (split.length >= 2) {
+    lastname = split[1].toLowerCase();
+    lastname = lastname.charAt(0).toUpperCase() + lastname.slice(1);
+  }
+  const params = {
+    TableName: "users",
+    ProjectionExpression: "username, firstname, lastname",
+    FilterExpression: "contains(firstname, :x) AND contains(lastname, :y)",
+    ExpressionAttributeValues: {
+      ":x": {
+        "S": firstname
+      },
+      ":y": {
+        "S": lastname
+      }
+    }
+  };
+  db.scan(params, function(err, data) {
+    callback(err, data);
   });
 }
 
@@ -306,6 +393,10 @@ const database = {
   login_lookup: loginLookup,
   add_user: addUser,
   update_affiliation: changeAffiliation,
+  update_email: changeEmail,
+  update_password: changePassword,
+  update_interests: changeInterests,
+  search_scan: searchScan,
   addMessage : addMessage,
   deleteMessage : deleteMessage,
   make_post: makePost,
