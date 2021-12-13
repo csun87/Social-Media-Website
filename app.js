@@ -34,6 +34,8 @@ app.post("/createaccount", routes.signup_user);
 app.post("/getuser", routes.get_user);
 app.post("/checklogin", routes.check_login);
 app.get("/feed", routes.get_feed);
+app.get("/newsfeed", routes.get_newsfeed);
+app.get("/searchnews", routes.get_searchnews);
 app.get("/signout", routes.sign_out);
 app.get("/chat", routes.chat);
 app.post("/makepost", routes.make_post);
