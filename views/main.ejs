@@ -58,31 +58,27 @@
     <div id="posts" class="container"></div>
   </body>
   <script>
+    function submitComment(event) {
+        event.preventDefault();
+        var s = String(event.target.id).substring(1);
+        const data = {
+          content : document.getElementById(s).value,
+          authortime : s
+        }
+        if (data.content.length == 0) {
+          alert("You cannot make an empty comment");
+        } else {
+          $.post("/makecomment", data, function(x) {
+            if (x.success) {
+              window.location.assign("/feed");
+            } else {
+              alert(x.msg);
+            }
+          });
+        }
+    }
 
-      function submitComment(event) {
-          event.preventDefault();
-          var s = String(event.target.id).substring(1);
-          const data = {
-            content : document.getElementById(s).value,
-            authortime : s
-          }
-          if (data.content.length == 0) {
-            alert("You cannot make an empty comment");
-          } else {
-            $.post("/makecomment", data, function(x) {
-              if (x.success) {
-                window.location.assign("/feed");
-              } else {
-                alert(x.msg);
-              }
-            });
-          }
-          
-      }
-
-    $(document).ready(function() {
-      $("#wall-nav-bar").attr("href", "/wall?username=<%= username %>");
-
+    function getPosts() {
       $.post("/getposts", {}, function(output) {
         const form_ids = [];
         const posts = output.data;
@@ -127,7 +123,7 @@
             } else {
               $.post("/makecomment", data, function(x) {
                   if (x.success) {
-                    location.reload(); // REPLACE LATER WITH NON-RELOAD FUNCTION
+                    getPosts(); // REPLACE LATER WITH NON-RELOAD FUNCTION
                   } else {
                     alert(x.msg);
                   }
@@ -136,68 +132,15 @@
           });
         });
       });
+    }
 
-      // $.post("/getposts", {}, function(data) {
-      //   console.log(data);
-        // const posts = []
-        // out.data.forEach(function(x) {
-        //   x.forEach(function(y) {
-        //     posts.push(y);
-        //   });
-        // });
-        // posts.sort(function(x, y) {
-        //   return y.timestamp - x.timestamp;
-        // });
-        // posts.forEach(function(post) {
-        //   var p = post.author + "$" + post.timestamp;
-          // const date = new Date(post.timestamp);
-          // var post = '<div class="card" style="width: 18rem;"><div class="card-body"><h5 class="card-title">' + post.author + 
-          //   '</h5><h6 class="card-subtitle mb-2 text-muted">' + date.toString() + 
-          //     '</h6><p class="card-text">' + post.content + 
-          //       '</p></div>';
-        //   const commentsData = {
-        //     authortime : p
-        //   }
-        //   $.post("/getcomments", commentsData, function(comments) {
-        //     comments.data.Items.forEach(function(comment) {
-              // const commentDate = new Date(parseInt(comment.timestamp.N));
-              // post = post + '<h5 class="card-subtitle">' + comment.author.S + '</h5>';
-              // post = post + '<h6 class="card-subtitle mb-2 text-muted">' + commentDate.toString() + '</h6>';
-              // post = post + '<p class="card-text">' + comment.content.S + '</p>';
-        //     });
-            // const commentFormId = 'make-comment-form-' + p;
-            // post = post + '<form id="' + commentFormId + '">'  
-            //   + '<div class="form-group">'
-            //   + '<input id="' + p + '-make-comment-text" type="text" class="form-control" placeholder="Enter comment">'
-            //   + '</div>'
-            //   + '<input id="make-comment-button" type="submit" class="btn btn-primary" value="Post comment">'
-            //   + '</form>'
-            //   + '</div>';
-        //     $("#posts").append(post + "</div>");
-            // var temp = '#' + commentFormId;
-            // temp = temp.replace(/\$/g, "\\$");
-            // $(temp).submit(function(event) {
-            //   event.preventDefault();
-            //   const data = {
-            //     key: p,
-            //     content: document.getElementById(p + '-make-comment-text').value,
-            //   };
-            //   if (data.content.length === 0) {
-            //     alert("You cannot make an empty comment");
-            //   } else {
-                // $.post("/makecomment", data, function(x) {
-                //   if (x.success) {
-                //     location.reload(); // REPLACE LATER WITH NON-RELOAD FUNCTION
-                //   } else {
-                //     alert(x.msg);
-                //   }
-                // });
-            //   }
-        //     });
-        //   });
-        // });
+    function refreshPosts() {
+        getPosts();
+        setTimeout(refreshPosts, 15000);
+      }
 
-
+    $(document).ready(function() {
+      $("#wall-nav-bar").attr("href", "/wall?username=<%= username %>");
       $("#make-post-form").submit(function(event) {
         event.preventDefault();
         const data = {
@@ -215,10 +158,7 @@
           });
         }
       });
-
-      
-
-
+      refreshPosts();
     });
   </script>
 </html>
