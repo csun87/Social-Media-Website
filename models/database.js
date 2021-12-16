@@ -225,6 +225,51 @@ const getPostsByAuthor = function(author, callback) {
   });
 }
 
+const getPostsAndComments = function(user, callback) {
+  getFriends(user, function(err, friends) {
+    if (err) {
+      callback(err, friends);
+    } else {
+      const promises = [];
+      friends.Items.forEach(function(friend) {
+        const params = {
+          TableName: "posts",
+          KeyConditionExpression: "author = :x",
+          ExpressionAttributeValues: {
+            ":x": {
+              "S": friend.user2.S
+            }
+          }
+        };
+        promises.push(db.query(params).promise().then(
+          function(posts) {
+            const postPromises = [];
+            posts.Items.forEach(function(item) {
+              const key = item.author.S + "$" + item.timestamp.N;
+              postPromises.push(getComments(key, function(err, data) {
+                if (err) {
+                  console.error("Unable to query. Error: ", JSON.stringify(err, null, 2));
+                } else {
+                  item.comments = data;
+                }
+              }).promise());
+            });
+            Promise.all(postPromises);
+          },
+          function(err) {
+            console.error("Unable to query. Error: ", JSON.stringify(err, null, 2));
+          }
+        ));
+        Promise.all(promises).then(function(data) {
+          const ans = [];
+          data.forEach((x) => ans.push(x));
+          callback(null, ans);
+        });
+      });
+    }
+  });
+}
+
 
 // FRIENDS FUNCTIONS
 
@@ -400,6 +445,7 @@ const database = {
   addMessage : addMessage,
   deleteMessage : deleteMessage,
   make_post: makePost,
+  get_posts_and_comments: getPostsAndComments,
   get_posts_by_author: getPostsByAuthor,
   get_friends: getFriends,
   get_comments: getComments,

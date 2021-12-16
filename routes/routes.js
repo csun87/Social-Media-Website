@@ -2,6 +2,7 @@ const fs = require("fs");
 const crypto = require("crypto");
 var db = require('../models/database.js');
 const AWS = require("aws-sdk");
+const { brotliCompressSync } = require("zlib");
 
 const renderLogin = function(req, res) {
   if (req.session.username) {
@@ -283,15 +284,42 @@ const getPosts = function(req, res) {
             }
           ));
         });
-        Promise.all(promises).then(function(data) {
-          const posts = [];
-          data.forEach(function(data) {
-            posts.push(data);
+        Promise.all(promises).then(function(a) {
+          const commentPromises = [];
+          a.forEach(function(b) {
+            b.forEach(function(data) {
+              const key = data.author + "$" + data.timestamp;
+              const commentParams = {
+                TableName: "reactions",
+                KeyConditionExpression: "authortime = :x",
+                ExpressionAttributeValues: {
+                  ":x": key
+                }
+              };
+              commentPromises.push(docClient.query(commentParams).promise().then(
+                function(x) {
+                  data.comments = x.Items;
+                  return data;
+                },
+                function(err) {
+                  console.error("Unable to query. Error: ", JSON.stringify(err, null, 2));
+                }
+              ));
+            });
           });
+          Promise.all(commentPromises).then(function(output) {
+            return res.send({
+              success: true,
+              data: output,
+              msg: null
+            });
+          });
+        },
+        function(err) {
           return res.send({
-            success: true,
-            data: posts,
-            msg: null
+            success: false,
+            data: null,
+            msg: JSON.stringify(err, null, 2)
           });
         });
       }
@@ -300,6 +328,26 @@ const getPosts = function(req, res) {
     res.redirect("/");
   }
 }
+
+// const getPosts = function(req, res) {
+//   if (req.session.username) {
+//     db.get_posts_and_comments(req.session.username, function(err, data) {
+//       if (err) {
+//         return res.send({
+//           success: false,
+//           msg: JSON.stringify(err, null, 2)
+//         });
+//       } else {
+//         return res.send({
+//           success: true,
+//           data: data
+//         });
+//       }
+//     });
+//   } else {
+//     res.redirect("/");
+//   }
+// }
 
 const getPostsByAuthor = function(req, res) {
   if (req.session.username) {
