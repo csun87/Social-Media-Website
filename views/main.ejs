@@ -84,6 +84,7 @@
       $("#wall-nav-bar").attr("href", "/wall?username=<%= username %>");
 
       $.post("/getposts", {}, function(output) {
+        const form_ids = [];
         const posts = output.data;
         posts.sort((x, y) => y.timestamp - x.timestamp);
         var str = "";
@@ -108,8 +109,32 @@
             + '</form>'
             + '</div></div>';
           str += text;
+          form_ids.push(commentFormId);
         });
         $("#posts").html(str);
+        form_ids.forEach(function(id) {
+          var temp = '#' + id;
+          const key = temp.substring(19);
+          temp = temp.replace(/\$/g, "\\$");
+          $(temp).submit(function(event) {
+            event.preventDefault();
+            const data = {
+              key: key,
+              content: document.getElementById(key + '-make-comment-text').value
+            };
+            if (data.content.length === 0) {
+              alert("You cannot make an empty comment.");
+            } else {
+              $.post("/makecomment", data, function(x) {
+                  if (x.success) {
+                    location.reload(); // REPLACE LATER WITH NON-RELOAD FUNCTION
+                  } else {
+                    alert(x.msg);
+                  }
+                });
+            }
+          });
+        });
       });
 
       // $.post("/getposts", {}, function(data) {
@@ -149,25 +174,25 @@
             //   + '</form>'
             //   + '</div>';
         //     $("#posts").append(post + "</div>");
-        //     var temp = '#' + commentFormId;
-        //     temp = temp.replace(/\$/g, "\\$");
-        //     $(temp).submit(function(event) {
-        //       event.preventDefault();
-        //       const data = {
-        //         key: p,
-        //         content: document.getElementById(p + '-make-comment-text').value,
-        //       };
-        //       if (data.content.length === 0) {
-        //         alert("You cannot make an empty comment");
-        //       } else {
-        //         $.post("/makecomment", data, function(x) {
-        //           if (x.success) {
-        //             location.reload(); // REPLACE LATER WITH NON-RELOAD FUNCTION
-        //           } else {
-        //             alert(x.msg);
-        //           }
-        //         });
-        //       }
+            // var temp = '#' + commentFormId;
+            // temp = temp.replace(/\$/g, "\\$");
+            // $(temp).submit(function(event) {
+            //   event.preventDefault();
+            //   const data = {
+            //     key: p,
+            //     content: document.getElementById(p + '-make-comment-text').value,
+            //   };
+            //   if (data.content.length === 0) {
+            //     alert("You cannot make an empty comment");
+            //   } else {
+                // $.post("/makecomment", data, function(x) {
+                //   if (x.success) {
+                //     location.reload(); // REPLACE LATER WITH NON-RELOAD FUNCTION
+                //   } else {
+                //     alert(x.msg);
+                //   }
+                // });
+            //   }
         //     });
         //   });
         // });
