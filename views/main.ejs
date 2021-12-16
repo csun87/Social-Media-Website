@@ -85,31 +85,31 @@
 
       $.post("/getposts", {}, function(output) {
         const posts = output.data;
-        console.log(posts);
         posts.sort((x, y) => y.timestamp - x.timestamp);
         var str = "";
         posts.forEach(function(post) {
           const date = new Date(post.timestamp);
-          var post = '<div class="card" style="width: 18rem;"><div class="card-body"><h5 class="card-title">' + post.author + 
+          var text = '<div class="card" style="width: 18rem;"><div class="card-body"><h5 class="card-title">' + post.author + 
             '</h5><h6 class="card-subtitle mb-2 text-muted">' + date.toString() + 
             '</h6><p class="card-text">' + post.content + 
             '</p></div>';
           post.comments.forEach(function(comment) {
             const commentDate = new Date(parseInt(comment.timestamp));
-            post = post + '<h5 class="card-subtitle">' + comment.author + '</h5>';
-            post = post + '<h6 class="card-subtitle mb-2 text-muted">' + commentDate.toString() + '</h6>';
-            post = post + '<p class="card-text">' + comment.content + '</p>';
+            text = text + '<h5 class="card-subtitle">' + comment.author + '</h5>';
+            text = text + '<h6 class="card-subtitle mb-2 text-muted">' + commentDate.toString() + '</h6>';
+            text = text + '<p class="card-text">' + comment.content + '</p>';
           });
           const commentFormId = 'make-comment-form-' + post.author + "$" + post.timestamp;
-          post = post + '<form id="' + commentFormId + '">'  
+          text = text + '<form id="' + commentFormId + '">'  
             + '<div class="form-group">'
-            + '<input id="' + p + '-make-comment-text" type="text" class="form-control" placeholder="Enter comment">'
+            + '<input id="' + post.author + "$" + post.timestamp + '-make-comment-text" type="text" class="form-control" placeholder="Enter comment">'
             + '</div>'
             + '<input id="make-comment-button" type="submit" class="btn btn-primary" value="Post comment">'
             + '</form>'
             + '</div></div>';
+          str += text;
         });
-        
+        $("#posts").html(str);
       });
 
       // $.post("/getposts", {}, function(data) {
