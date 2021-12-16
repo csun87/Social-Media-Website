@@ -523,6 +523,24 @@ const getSettings = function(req, res) {
   }
 }
 
+// NEWSFEED ROUTES
+
+const getNewsFeed = function(req, res) {
+  if (req.session.username) {
+    res.render("newsfeed.ejs", {});
+  } else {
+    res.redirect("/");
+  }
+}
+
+const getSearchNews = function(req, res) {
+  if (req.session.username) {
+    res.render("searchnews.ejs", {});
+  } else {
+    res.redirect("/");
+  }
+}
+
 // SEARCH ROUTES
 
 const getSearch = function(req, res) {
@@ -554,6 +572,8 @@ const routes = {
   render_wall: renderWall,
   io_on : io_on,
   get_settings: getSettings,
+  get_newsfeed: getNewsFeed,
+  get_searchnews: getSearchNews,
   get_search: getSearch,
   search_scan: searchScan
 };
