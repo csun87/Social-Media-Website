@@ -42,6 +42,7 @@ app.post("/makepost", routes.make_post);
 app.post("/getposts", routes.get_posts);
 app.post("/getpostsbyauthor", routes.get_posts_by_author);
 app.get("/wall", routes.render_wall);
+app.post("/addfriend", routes.add_friend);
 app.post("/makecomment", routes.make_comment);
 app.post("/getcomments", routes.get_comments);
 app.get("/settings", routes.get_settings);
@@ -52,8 +53,11 @@ app.post("/changeinterests", routes.change_interests);
 app.get("/search", routes.get_search);
 app.post("/searchscan", routes.search_scan);
 
-console.log('Authors: Christian Sun, Belinda Xi, William Fan, Kishen Sivabalan');
-http.listen(8080, () => console.log("HTTP server started on port 8080! Go to http://localhost:8080"));
+http.listen(8080, function() {
+   console.log("Welcome to PennBook, Team G13's NETS-212 final project!");
+   console.log('Authors: Christian Sun (chsun), Kishen Sivabalan (kishens), Belinda Xi (belindax), & William Fan (willfan)');
+   console.log("HTTP server started on port 8080! Go to http://localhost:8080\n\n");
+});
 
 
 

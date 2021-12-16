@@ -17,8 +17,22 @@ const renderSignup = function(req, res) {
 }
 
 const renderWall = function(req, res) {
-  if (req.session.username) {
-    res.render("wall.ejs", {});
+  const page = req.url.substring(15);
+  if (req.session.username === page) {
+    res.render("wall_self.ejs", {});
+  } else if (req.session.username) {
+    db.check_friends(req.session.username, function(err, data) {
+      if (err) {
+        console.error(JSON.stringify(err, null, 2));
+      } else {
+        const friends = data.Items[0].friends.SS;
+        if (friends && friends.includes(page)) {
+          res.render("wall_friend.ejs", {});
+        } else {
+          res.render("wall_stranger.ejs", {});
+        }
+      }
+    });
   } else {
     res.redirect("/");
   }
@@ -90,7 +104,12 @@ const signupUser = function(req, res) {
   const affiliation = req.body.affiliation;
   const birthday = req.body.birthday;
   const interests = req.body.interests;
-  if (username.length !== 0 && password.length !== 0 && firstname.length !== 0 && lastname.length !== 0 && email.length !== 0 && affiliation.length !== 0 && birthday.length !== 0 && interests && interests.length !== 0) { 
+  if (interests.length < 2) {
+    return res.send({
+      success: false,
+      msg: "You must have at least two interests."
+    });
+  } else if (username.length !== 0 && password.length !== 0 && firstname.length !== 0 && lastname.length !== 0 && email.length !== 0 && affiliation.length !== 0 && birthday.length !== 0 && interests && interests.length !== 0) { 
     const hashed = crypto.createHash("sha256").update(password).digest("hex");
     db.add_user(username, hashed, firstname, lastname, email, affiliation, birthday, interests, function(err, msg) {
       if (err) {
@@ -221,13 +240,33 @@ const signout = function(req, res) {
   res.redirect("/");
 }
 
+const addFriend = function(req, res) {
+  if (req.session.username) {
+    db.add_friend(req.session.username, req.body.friend, function(err, data) {
+      if (err) {
+        return res.send({
+          success: false,
+          msg: JSON.stringify(err, null, 2)
+        });
+      } else {
+        return res.send({
+          success: true,
+          msg: null
+        });
+      }
+    });
+  } else {
+    res.redirect("/");
+  }
+}
+
 const makePost = function(req, res) {
   if (req.session.username) {
     db.make_post(req.session.username, req.body.content, function(err, data) {
       if (err) {
         return res.send({
           success: false,
-          msg: "Unsuccessful"
+          msg: JSON.stringify(err, null, 2)
         });
       } else {
         return res.send({
@@ -252,37 +291,24 @@ const getPosts = function(req, res) {
       } else {
         var docClient = new AWS.DynamoDB.DocumentClient();
         const promises = [];
-        const temp = {
-          TableName: "posts",
-          KeyConditionExpression: "author = :x",
-          ExpressionAttributeValues: {
-            ":x": req.session.username
-          }
-        };
-        promises.push(docClient.query(temp).promise().then(
-          function(data) {
-            return data.Items;
-          },
-          function(err) {
-            console.error("Unable to query. Error: ", JSON.stringify(err, null, 2));
-          }
-        ));
         data.Items.forEach(function(item) {
-          const params = {
-            TableName: "posts",
-            KeyConditionExpression: "author = :x",
-            ExpressionAttributeValues: {
-              ":x": item.user2.S
-            }
-          };
-          promises.push(docClient.query(params).promise().then(
-            function(data) {
-              return data.Items;
-            },
-            function(err) {
-              console.error("Unable to query. Error: ", JSON.stringify(err, null, 2));
-            }
-          ));
+          item.friends.SS.forEach(function(friend) {
+            const params = {
+              TableName: "posts",
+              KeyConditionExpression: "author = :x",
+              ExpressionAttributeValues: {
+                ":x": friend
+              }
+            };
+            promises.push(docClient.query(params).promise().then(
+              function(data) {
+                return data.Items;
+              },
+              function(err) {
+                console.error("Unable to query. Error: ", JSON.stringify(err, null, 2));
+              }
+            ));
+          });
         });
         Promise.all(promises).then(function(a) {
           const commentPromises = [];
@@ -328,26 +354,6 @@ const getPosts = function(req, res) {
     res.redirect("/");
   }
 }
-
-// const getPosts = function(req, res) {
-//   if (req.session.username) {
-//     db.get_posts_and_comments(req.session.username, function(err, data) {
-//       if (err) {
-//         return res.send({
-//           success: false,
-//           msg: JSON.stringify(err, null, 2)
-//         });
-//       } else {
-//         return res.send({
-//           success: true,
-//           data: data
-//         });
-//       }
-//     });
-//   } else {
-//     res.redirect("/");
-//   }
-// }
 
 const getPostsByAuthor = function(req, res) {
   if (req.session.username) {
@@ -575,7 +581,8 @@ const routes = {
   get_newsfeed: getNewsFeed,
   get_searchnews: getSearchNews,
   get_search: getSearch,
-  search_scan: searchScan
+  search_scan: searchScan,
+  add_friend: addFriend
 };
 
 module.exports = routes;

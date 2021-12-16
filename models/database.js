@@ -67,7 +67,24 @@ const addUser = function(username, password, firstname, lastname, email, affilia
     if (err) {
       callback(err);
     } else {
-      callback(null, "Account successfully created");
+      const friendParams = {
+        TableName: "friends",
+        Item: {
+          "username": {
+            "S": username
+          },
+          "friends": {
+            "SS": [username]
+          }
+        }
+      };
+      db.putItem(friendParams, function(err, data) {
+        if (err) {
+          callback(err);
+        } else {
+          callback(null, "Account successfully created");
+        }
+      });
     }
   });
 }
@@ -276,13 +293,12 @@ const getPostsAndComments = function(user, callback) {
 const getFriends = function(user, callback) {
   const params = {
     TableName: "friends",
-    KeyConditionExpression: "user1 = :user",
+    KeyConditionExpression: "username = :user",
     ExpressionAttributeValues: {
       ":user": {
         "S": user
       }
-    },
-    // FilterExpression: "states = FRIENDS"
+    }
   };
   db.query(params, function(err, data) {
     callback(err, data);
@@ -291,32 +307,45 @@ const getFriends = function(user, callback) {
 
 const addFriend = function(sender, receiver, callback) {
   const params = {
-    RequestItems: {
-      "friends": [
-        {
-          PutRequest: {
-            Item: {
-              "user1": { "S": "sender" },
-              "user2": { "S": "receiver" },
-              "states": { "S": "FRIENDS" }
-            }
-          }
+    TableName: "friends",
+    Key: {
+      "username": {"S": sender}
+    },
+    UpdateExpression: "ADD friends :y",
+    ExpressionAttributeValues: {
+      ":y": {"SS": [receiver]}
+    },
+  };
+  db.updateItem(params, function(err, data) {
+    if (err) {
+      callback(err, data);
+    } else {
+      const params2 = {
+        TableName: "friends",
+        Key: {
+          "username": {"S": receiver}
         },
-        {
-          PutRequest: {
-            Item: {
-              "user1": { "S": "receiver" },
-              "user2": { "S": "sender" },
-              "states": { "S": "FRIENDS" }
-            }
-          }
-        }
-      ]
+        UpdateExpression: "ADD friends :y",
+        ExpressionAttributeValues: {
+          ":y": {"SS": [sender]}
+        },
+      };
+      db.updateItem(params2, callback);
+    }
+  });
+}
+
+const checkFriends = function(user, callback) {
+  const params = {
+    TableName: "friends",
+    KeyConditionExpression: "username = :x",
+    ExpressionAttributeValues: {
+      ":x": {
+        "S": user
+      }
     }
   };
-  db.batchWriteItem(params, function(err, data) {
-    callback(err, data);
-  });
+  db.query(params, callback);
 }
 
 // REACTIONS FUNCTIONS
@@ -448,6 +477,8 @@ const database = {
   get_posts_and_comments: getPostsAndComments,
   get_posts_by_author: getPostsByAuthor,
   get_friends: getFriends,
+  check_friends: checkFriends,
+  add_friend: addFriend,
   get_comments: getComments,
   make_comment: makeComment,
   get_Messages : getAllMessages
