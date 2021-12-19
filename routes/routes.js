@@ -2,6 +2,7 @@ const fs = require("fs");
 const crypto = require("crypto");
 var db = require('../models/database.js');
 const AWS = require("aws-sdk");
+const { resolveSoa } = require("dns");
 
 const renderLogin = function(req, res) {
   if (req.session.username) {
@@ -26,9 +27,21 @@ const renderWall = function(req, res) {
       } else {
         const friends = data.Items[0].friends.SS;
         if (friends && friends.includes(page)) {
-          res.render("wall_friend.ejs", {});
+          db.log_last_action(req.session.username, function(err, data) {
+            if (err) {
+              console.error(JSON.stringify(err, null, 2));
+            } else {
+              res.render("wall_friend.ejs", {});
+            }
+          });
         } else {
-          res.render("wall_stranger.ejs", {});
+          db.log_last_action(req.session.username, function(err, data) {
+            if (err) {
+              console.error(JSON.stringify(err, null, 2));
+            } else {
+              res.render("wall_stranger.ejs", {});
+            }
+          });
         }
       }
     });
@@ -40,6 +53,55 @@ const renderWall = function(req, res) {
 const getUser = function(req, res) {
   const username = req.body.username;
   db.login_lookup(username, function(err, data) {
+    if (err) {
+      res.send({
+        success: false,
+        msg: JSON.stringify(err, null, 2)
+      });
+    } else {
+      res.send({
+        success: true,
+        data: data.Items[0]
+      });
+    }
+  });
+}
+
+const getLastAction = function(req, res) {
+  const username = req.body.username;
+  db.get_last_action(username, function(err, data) {
+    if (err) {
+      res.send({
+        success: false,
+        msg: JSON.stringify(err, null, 2)
+      });
+    } else {
+      const lastAction = data.Items[0].lastAction;
+      if (!lastAction) {
+        res.send({
+          success: true,
+          data: false
+        });
+      } else {
+        const currentTime = new Date();
+        if (currentTime.getTime() - lastAction.N <= 300000) {
+          res.send({
+            success: true,
+            data: true
+          });
+        } else {
+          res.send({
+            success: true,
+            data: false
+          });
+        }
+      }
+    }
+  });
+}
+
+const getFriends = function(req, res) {
+  db.get_friends(req.session.username, function(err, data) {
     if (err) {
       res.send({
         success: false,
@@ -72,9 +134,15 @@ const checkLogin = function(req, res) {
         });
       } else if (data && data.Items[0].password.S === hashed) { // Username was found in table and password is a match
           req.session.username = username; // Creates username in the session
-          res.send({
-            success: true,
-            msg: null
+          db.log_last_action(req.session.username, function(err, data) {
+            if (err) {
+              console.error(JSON.stringify(err, null, 2));
+            } else {
+              res.send({
+                success: true,
+                msg: null
+              });
+            }
           });
       } else {
         res.send({
@@ -88,7 +156,13 @@ const checkLogin = function(req, res) {
 
 const getFeed = function(req, res) {
   if (req.session.username) {
-    res.render("main.ejs", {});
+    db.log_last_action(req.session.username, function(err, data) {
+      if (err) {
+        console.error(JSON.stringify(err, null, 2));
+      } else {
+        res.render("main.ejs", {});
+      }
+    });
   } else {
     res.redirect("/login");
   }
@@ -143,9 +217,15 @@ const changeEmail = function(req, res) {
         msg: "Unsuccessful"
       });
     } else {
-      return res.send({
-        success: true,
-        msg: null
+      db.log_last_action(req.session.username, function(err, data) {
+        if (err) {
+          console.error(JSON.stringify(err, null, 2));
+        } else {
+          res.send({
+            success: true,
+            msg: null
+          });
+        }
       });
     }
   });
@@ -164,9 +244,15 @@ const changePassword = function(req, res) {
         msg: "Unsuccessful"
       });
     } else {
-      res.send({
-        success: true,
-        msg: null
+      db.log_last_action(req.session.username, function(err, data) {
+        if (err) {
+          console.error(JSON.stringify(err, null, 2));
+        } else {
+          res.send({
+            success: true,
+            msg: null
+          });
+        }
       });
     }
   });
@@ -192,9 +278,15 @@ const changeAffiliation = function(req, res) {
             msg: JSON.stringify(err, null, 2)
           });
         } else {
-          res.send({
-            success: true,
-            msg: null
+          db.log_last_action(req.session.username, function(err, data) {
+            if (err) {
+              console.error(JSON.stringify(err, null, 2));
+            } else {
+              res.send({
+                success: true,
+                msg: null
+              });
+            }
           });
         }
       });
@@ -226,9 +318,15 @@ const changeInterests = function(req, res) {
             msg: JSON.stringify(err, null, 2)
           });
         } else {
-          res.send({
-            success: true,
-            msg: null
+          db.log_last_action(req.session.username, function(err, data) {
+            if (err) {
+              console.error(JSON.stringify(err, null, 2));
+            } else {
+              res.send({
+                success: true,
+                msg: null
+              });
+            }
           });
         }
       });
@@ -272,9 +370,15 @@ const addFriend = function(req, res) {
           msg: JSON.stringify(err, null, 2)
         });
       } else {
-        return res.send({
-          success: true,
-          msg: null
+        db.log_last_action(req.session.username, function(err, data) {
+          if (err) {
+            console.error(JSON.stringify(err, null, 2));
+          } else {
+            res.send({
+              success: true,
+              msg: null
+            });
+          }
         });
       }
     });
@@ -292,9 +396,15 @@ const removeFriend = function(req, res) {
           msg: JSON.stringify(err, null, 2)
         });
       } else {
-        return res.send({
-          success: true,
-          msg: null
+        db.log_last_action(req.session.username, function(err, data) {
+          if (err) {
+            console.error(JSON.stringify(err, null, 2));
+          } else {
+            res.send({
+              success: true,
+              msg: null
+            });
+          }
         });
       }
     });
@@ -312,9 +422,15 @@ const makePost = function(req, res) {
           msg: JSON.stringify(err, null, 2)
         });
       } else {
-        return res.send({
-          success: true,
-          msg: null
+        db.log_last_action(req.session.username, function(err, data) {
+          if (err) {
+            console.error(JSON.stringify(err, null, 2));
+          } else {
+            res.send({
+              success: true,
+              msg: null
+            });
+          }
         });
       }
     });
@@ -332,9 +448,15 @@ const makePostWall = function(req, res) {
           msg: JSON.stringify(err, null, 2)
         });
       } else {
-        return res.send({
-          success: true,
-          msg: null
+        db.log_last_action(req.session.username, function(err, data) {
+          if (err) {
+            console.error(JSON.stringify(err, null, 2));
+          } else {
+            res.send({
+              success: true,
+              msg: null
+            });
+          }
         });
       }
     });
@@ -524,9 +646,15 @@ const makeComment = function(req, res) {
           msg: JSON.stringify(err, null, 2)
         });
       } else {
-        return res.send({
-          success: true,
-          msg: null
+        db.log_last_action(req.session.username, function(err, data) {
+          if (err) {
+            console.error(JSON.stringify(err, null, 2));
+          } else {
+            res.send({
+              success: true,
+              msg: null
+            });
+          }
         });
       }
     });
@@ -847,6 +975,7 @@ const getSearch = function(req, res) {
 const routes = {
   get_login_page: renderLogin,
   get_user: getUser,
+  get_friends: getFriends,
   check_login: checkLogin,
   get_signup_page: renderSignup,
   signup_user: signupUser,
@@ -872,7 +1001,8 @@ const routes = {
   get_search: getSearch,
   search_scan: searchScan,
   add_friend: addFriend,
-  remove_friend: removeFriend
+  remove_friend: removeFriend,
+  get_last_action: getLastAction,
 };
 
 module.exports = routes;

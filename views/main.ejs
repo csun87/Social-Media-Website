@@ -71,7 +71,14 @@
         <input id="make-post-button" type="submit" class="btn btn-primary" value="Make Post">
       </form>
     </div>
-    <div id="posts" class="container"></div>
+    <div class="things" style="display: flex">
+      <div id="posts" class="container" style="display: inline-block"></div>
+      <div id="friends" class="container" style="display: inline-block">
+        <h2>Friends</h2>
+        <ul id="friends-list">
+        </ul>
+      </div>
+    </div>
   </body>
   <script>
     function submitComment(event) {
@@ -151,12 +158,33 @@
       });
     }
 
+    function getFriends() {
+      const username = "<%= username %>";
+      $.post("/getfriends", {}, function(x) {
+        const friends = x.data.friends.SS;
+        friends.forEach(function(friend) {
+          if (friend === username) {
+            return;
+          }
+          $.post("/getlastaction", {username: friend}, function(x) {
+            const isLoggedIn = x.data;
+            if (isLoggedIn) {
+              $("#friends-list").append("<li>" + friend + " || ONLINE</li>");
+            } else {
+              $("#friends-list").append("<li>" + friend + " || OFFLINE</li>");
+            }
+          });
+        });
+      });
+    }
+
     function refreshPosts() {
       getPosts();
       setTimeout(refreshPosts, 15000);
     }
 
     $(document).ready(function() {
+      getFriends();
       $("#wall-nav-bar").attr("href", "/wall?username=<%= username %>");
       $("#make-post-form").submit(function(event) {
         event.preventDefault();

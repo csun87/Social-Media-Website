@@ -32,6 +32,8 @@ app.get("/login", routes.get_login_page);
 app.get("/signup", routes.get_signup_page);
 app.post("/createaccount", routes.signup_user);
 app.post("/getuser", routes.get_user);
+app.post("/getfriends", routes.get_friends);
+app.post("/getlastaction", routes.get_last_action);
 app.post("/checklogin", routes.check_login);
 app.get("/feed", routes.get_feed);
 app.get("/newsfeed", routes.get_newsfeed);
@@ -62,7 +64,3 @@ http.listen(8080, function() {
    console.log('Authors: Christian Sun (chsun), Kishen Sivabalan (kishens), Belinda Xi (belindax), & William Fan (willfan)');
    console.log("HTTP server started on port 8080! Go to http://localhost:8080");
 });
-
-
-
-
