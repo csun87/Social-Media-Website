@@ -3,6 +3,7 @@ const crypto = require("crypto");
 var db = require('../models/database.js');
 const AWS = require("aws-sdk");
 const { resolveSoa } = require("dns");
+const { check_friends } = require("../models/database.js");
 
 const renderLogin = function(req, res) {
   if (req.session.username) {
@@ -1043,32 +1044,95 @@ const updateVisualization = function(req, res) {
           var docClient = new AWS.DynamoDB.DocumentClient();
           const promises = [];
           friends = friends.Items[0].friends.SS;
-          friends.forEach(function(friend) {
-            if (friend === req.params.user) {
-              return;
+          const checkPermsPromises = [];
+          const checkFriends = {
+            TableName: "friends",
+            KeyConditionExpression: "username = :x",
+            ProjectionExpression: "friends",
+            ExpressionAttributeValues: {
+              ":x": req.session.username
             }
-            const fParams = {
-              TableName: "users",
-              KeyConditionExpression: "username = :x",
-              ProjectionExpression: "firstname",
-              ExpressionAttributeValues: {
-                ":x": friend
+          };
+          const affiliationParams = {
+            TableName: "users",
+            KeyConditionExpression: "username = :x",
+            ProjectionExpression: "affiliation",
+            ExpressionAttributeValues: {
+              ":x": req.session.username
+            }
+          };
+          checkPermsPromises.push(docClient.query(checkFriends).promise().then(
+            function(y) {
+              return y.Items[0].friends.values;
+            },
+            function(err) {
+              console.error("Unable to query. Error: ", JSON.stringify(err, null, 2));
+            }
+          ));
+          checkPermsPromises.push(docClient.query(affiliationParams).promise().then(
+            function(y) {
+              return y.Items[0].affiliation;
+            },
+            function(err) {
+              console.error("Unable to query. Error: ", JSON.stringify(err, null, 2));
+            }
+          ));
+          Promise.all(checkPermsPromises).then(function(x) {
+            const userPromises = [];
+            friends.forEach(function(friend) {
+              if (!x[0].includes(friend)) {
+                const affParams = {
+                  TableName: "users",
+                  KeyConditionExpression: "username = :x",
+                  ProjectionExpression: "username, affiliation",
+                  ExpressionAttributeValues: {
+                    ":x": friend
+                  }
+                };
+                userPromises.push(docClient.query(affParams).promise().then(
+                  function(y) {
+                    return y.Items[0];
+                  },
+                  function(err) {
+                    console.error("Unable to query. Error: ", JSON.stringify(err, null, 2));
+                  }
+                ));
               }
-            };
-            promises.push(docClient.query(fParams).promise().then(
-              function(y) {
-                return {username: friend, firstname: y.Items[0].firstname};
-              },
-              function(err) {
-                console.error("Unable to query. Error: ", JSON.stringify(err, null, 2));
-              }
-            ))
-          });
-          Promise.all(promises).then(function(x) {
-            x.forEach(function(name) {
-              json.children.push({"id": name.username, "name": name.firstname, "children": [], "data": []});
             });
-            res.send(json);
+            Promise.all(userPromises).then(function(z) {
+              z.forEach(function(item) {
+                if (item.affiliation !== x[1]) {
+                  friends.splice(friends.indexOf(item.username), 1);
+                }
+              });
+              friends.forEach(function(friend) {
+                if (friend === req.params.user) {
+                  return;
+                }
+                const fParams = {
+                  TableName: "users",
+                  KeyConditionExpression: "username = :x",
+                  ProjectionExpression: "firstname",
+                  ExpressionAttributeValues: {
+                    ":x": friend
+                  }
+                };
+                promises.push(docClient.query(fParams).promise().then(
+                  function(y) {
+                    return {username: friend, firstname: y.Items[0].firstname};
+                  },
+                  function(err) {
+                    console.error("Unable to query. Error: ", JSON.stringify(err, null, 2));
+                  }
+                ))
+              });
+              Promise.all(promises).then(function(x) {
+                x.forEach(function(name) {
+                  json.children.push({"id": name.username, "name": name.firstname, "children": [], "data": []});
+                });
+                res.send(json);
+              });
+            });
           });
         }
       });
