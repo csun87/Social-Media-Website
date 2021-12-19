@@ -80,6 +80,10 @@
 
 
   <div class="col-lg-6 col-sm-12 left">
+    <form id="roomForm" action="" class="flex">
+      <input id = "inputRoom" autocomplete="off" type="text" class = "form-control" placeholder="Add a new chat room..."> </br> 
+      <button type="button" class="btn btn-sm btn-secondary btn-lg">Send</button>
+    </form>
     <ul class = "roomList" id = "rooms">
 
     </ul>
@@ -115,6 +119,8 @@
   var form = document.getElementById('form');
   var input = document.getElementById('input');
   var rooms = document.getElementById('rooms');
+  var roomForm = document.getElementById('roomForm');
+  var roomFormInput = document.getElementById('inputRoom');
   var messageList = []
   var roomList = []
   var currentRoom
@@ -150,7 +156,8 @@
 
     msg[1].rooms.forEach( x => {
       var item = document.createElement('li');
-      item.innerHTML += '<input id="roomBtn" type="button" value='+ x + ' onclick="changeRoom('+x+')" />'
+      item.innerHTML += '<input id="roomBtn" type="button" value='+ x.S + ' onclick= changeRoom("' +x.S+ '") />'
+      //console.log(item.innerHTML)
       rooms.appendChild(item);
       roomList.push(item);
     })
@@ -163,7 +170,7 @@
 
   socket.on('refr', function(msg) {
     var newMessage = true;
-    console.log(msg)
+    console.log(currentRoom)
     msg[0].Items.forEach(x => {
 
       var item = document.createElement('li');
@@ -204,18 +211,33 @@
   });
 
   function changeRoom(e) {
+    console.log(e);
 
     if (e != currentRoom) {
+      console.log(e);
       socket.emit("change room", e)
     }
-    
-
 
   }
+
+  roomForm.addEventListener('submit', function(e) {
+    console.log(inputRoom.value);
+    e.preventDefault();
+    if (inputRoom.value) {
+      console.log("werb")
+
+      var send = {
+        message : inputRoom.value,
+        room : currentRoom
+      }
+      socket.emit('addRoom', send);
+      input.value = '';
+    }
+  });
   
 
   setInterval(function() {
-    console.log("refresh")
+    //console.log("refresh")
     socket.emit('refresh', currentRoom);
   }, 2000);
 

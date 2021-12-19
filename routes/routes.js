@@ -433,28 +433,37 @@ const io_on = function(socket) {
 
   console.log(socket.handshake.session);
 
-  //Getting all messages on page load
-  db.get_Messages(0, function(err,data) {
-   if(err) {
-      console.log(err)
-   } else {
-      //console.log(data);
-      var send = []
+  var r;
+  //get rooms
+  db.login_lookup(socket.handshake.session.username, function(err, data) {
+    console.log(data.Items[0].rooms.L);
+    r = data.Items[0].rooms.L
 
-      var moreData = {
-        user : socket.handshake.session.username,
-        rooms : [0,1,7],
-        currentRoom : 0
+    //Getting all messages on page load
+    db.get_Messages(r[0].s, function(err,data) {
+      if(err) {
+        console.log(err)
+      } else {
+        //console.log(data);
+        var send = []
+  
+        var moreData = {
+          user : socket.handshake.session.username,
+          rooms : r,
+          currentRoom : r[0].S
+        }
+        send.push(data);
+        send.push(moreData)
+        //console.log(send)
+        socket.emit('prev_messages', send);
+  
+        socket.emit('chat')
       }
-      send.push(data);
-      send.push(moreData)
-      //console.log(send)
-      socket.emit('prev_messages', send);
+  
+      })
 
-      socket.emit('chat')
-   }
-
-   })
+  })
+  
 
   //Receiving new message
   socket.on("test", arg => {
@@ -468,6 +477,7 @@ const io_on = function(socket) {
     });
     console.log("message received");
     socket.emit('chat message', arg);
+
   });
 
   //Refreshing the page
@@ -489,33 +499,84 @@ const io_on = function(socket) {
          //console.log(send)
          socket.emit('refr', send);
       }
+
+      
    
       });
   });
 
   socket.on("change room", arg => {
-    db.get_Messages(arg, function(err,data) {
-      if(err) {
-         console.log(err)
-      } else {
-         //console.log(data);
-         var send = []
-   
-         var moreData = {
-           user : socket.handshake.session.username,
-           rooms : [0,1,7],
-           currentRoom : arg
-         }
-         send.push(data);
-         send.push(moreData)
-         //console.log(send)
-         socket.emit('prev_messages', send);
 
-        }
-      })
-    
+    var r;
+    db.login_lookup(socket.handshake.session.username, function(err, data) {
+      console.log(data);
+      r = data.Items[0].rooms.L
 
+      db.get_Messages(arg, function(err,data) {
+        if(err) {
+           console.log(err)
+        } else {
+           console.log(data);
+           var send = []
+     
+           var moreData = {
+             user : socket.handshake.session.username,
+             rooms : r,
+             currentRoom : arg
+           }
+           send.push(data);
+           send.push(moreData)
+           //console.log(send)
+           socket.emit('prev_messages', send);
+  
+          }
+        })
+    })
   })
+
+  //sort room id to make sure unique
+  //sort messages
+  //front end + front end
+
+  socket.on("addRoom", arg => {
+
+    console.log(arg);
+    var o = arg.message.split(",");
+    console.log(o);
+
+    console.log("Adding room " + arg)
+/*
+    var r;
+
+    db.add_room(socket.handshake.session.username, arg.message, function(err,dat){
+      console.log(dat)
+
+      db.login_lookup(socket.handshake.session.username, function(err, data) {
+        console.log(data);
+        r = data.Items[0].rooms.L
+
+        db.get_Messages(arg, function(err,data) {
+          if(err) {
+            console.log(err)
+          } else {
+            console.log(data);
+            var send = []
+      
+            var moreData = {
+              user : socket.handshake.session.username,
+              rooms : r,
+              currentRoom : arg
+            }
+            send.push(data);
+            send.push(moreData)
+            //console.log(send)
+            socket.emit('prev_messages', send);
+    
+            }
+          })
+      })
+    }*/
+  })  
 
 }
 

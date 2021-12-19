@@ -392,10 +392,10 @@ const makeComment = function(key, content, author, callback) {
 
 const getAllMessages = function(id, callback) {
   var params = {
-    TableName: "messages",
+    TableName: "messages2",
     KeyConditionExpression: "groupid = :groupid",
     ExpressionAttributeValues: {
-        ':groupid' : {N: String(id)}
+        ':groupid' : {S: String(id)}
       },
   };
 
@@ -411,10 +411,10 @@ const getAllMessages = function(id, callback) {
 const addMessage = function(author, groupId, message, callback) {
   const date = new Date().getTime();
   const params = {
-    TableName: "messages",
+    TableName: "messages2",
     Item: {
       "groupid": {
-        "N": String(groupId)
+        "S": String(groupId)
       },
       "timestamp": {
         "S": date.toString()
@@ -438,10 +438,10 @@ const addMessage = function(author, groupId, message, callback) {
 
 const deleteMessage = function(id, timestamp, author, message) {
   const params = {
-    TableName: "messages",
+    TableName: "messages2",
     Item: {
       "groupid": {
-        "N": id
+        "S": String(id)
       },
       "timestamp": {
         "S": timestamp
@@ -463,6 +463,60 @@ const deleteMessage = function(id, timestamp, author, message) {
   });
 }
 
+const addRoom = function(username, newRoomName, callback) {
+
+  const params = {
+    TableName: 'users',
+    KeyConditionExpression: '#y = :x',
+    ExpressionAttributeNames: {
+      '#y': 'username'
+    },
+    ExpressionAttributeValues: {
+      ':x': {
+        'S': username
+      }
+    }
+  };
+  db.query(params, function(err, data) {
+    if (err || data.Items.length == 0) {
+      callback(err, null);
+    } else {
+      callback(err, data);
+
+      
+
+      var rooms = data.Items[0].rooms.L
+
+      console.log(rooms);
+      rooms.push({"S": newRoomName})
+
+      console.log(rooms)
+
+      const params = {
+        TableName: "users",
+        Key: {
+          "username": {
+            "S": username
+          }
+        },
+        UpdateExpression: "set rooms = :x",
+        ExpressionAttributeValues: {
+          ":x": {
+            "L": rooms
+          }
+        }
+      };
+      db.updateItem(params, function(err, data) {
+        callback(err, data);
+      });
+
+
+    }
+  });
+
+  
+}
+
 const database = {
   login_lookup: loginLookup,
   add_user: addUser,
@@ -481,7 +535,8 @@ const database = {
   add_friend: addFriend,
   get_comments: getComments,
   make_comment: makeComment,
-  get_Messages : getAllMessages
+  get_Messages : getAllMessages,
+  add_room : addRoom
 };
 
 module.exports = database;
