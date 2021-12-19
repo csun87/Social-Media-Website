@@ -323,6 +323,26 @@ const makePost = function(req, res) {
   }
 }
 
+const makePostWall = function(req, res) {
+  if (req.session.username) {
+    db.make_post_to_wall(req.session.username, req.body.content, req.body.recipient, function(err, data) {
+      if (err) {
+        return res.send({
+          success: false,
+          msg: JSON.stringify(err, null, 2)
+        });
+      } else {
+        return res.send({
+          success: true,
+          msg: null
+        });
+      }
+    });
+  } else {
+    res.redirect("/");
+  }
+}
+
 const getPosts = function(req, res) {
   if (req.session.username) {
     db.get_friends(req.session.username, function(err, data) {
@@ -341,6 +361,83 @@ const getPosts = function(req, res) {
               KeyConditionExpression: "author = :x",
               ExpressionAttributeValues: {
                 ":x": friend
+              }
+            };
+            promises.push(docClient.query(params).promise().then(
+              function(data) {
+                return data.Items;
+              },
+              function(err) {
+                console.error("Unable to query. Error: ", JSON.stringify(err, null, 2));
+              }
+            ));
+          });
+        });
+        Promise.all(promises).then(function(a) {
+          const commentPromises = [];
+          a.forEach(function(b) {
+            b.forEach(function(data) {
+              const key = data.author + "$" + data.timestamp;
+              const commentParams = {
+                TableName: "reactions",
+                KeyConditionExpression: "authortime = :x",
+                ExpressionAttributeValues: {
+                  ":x": key
+                }
+              };
+              commentPromises.push(docClient.query(commentParams).promise().then(
+                function(x) {
+                  data.comments = x.Items;
+                  return data;
+                },
+                function(err) {
+                  console.error("Unable to query. Error: ", JSON.stringify(err, null, 2));
+                }
+              ));
+            });
+          });
+          Promise.all(commentPromises).then(function(output) {
+            return res.send({
+              success: true,
+              data: output,
+              msg: null
+            });
+          });
+        },
+        function(err) {
+          return res.send({
+            success: false,
+            data: null,
+            msg: JSON.stringify(err, null, 2)
+          });
+        });
+      }
+    });
+  } else {
+    res.redirect("/");
+  }
+}
+
+const getPostsWall = function(req, res) {
+  if (req.session.username) {
+    db.get_friends(req.body.user, function(err, data) {
+      if (err) {
+        return res.send({
+          success: false,
+          msg: JSON.stringify(err, null, 2)
+        });
+      } else {
+        var docClient = new AWS.DynamoDB.DocumentClient();
+        const promises = [];
+        data.Items.forEach(function(item) {
+          item.friends.SS.forEach(function(friend) {
+            const params = {
+              TableName: "posts",
+              KeyConditionExpression: "author = :x",
+              FilterExpression: "isWall = :y",
+              ExpressionAttributeValues: {
+                ":x": friend,
+                ":y": req.body.user
               }
             };
             promises.push(docClient.query(params).promise().then(
@@ -675,9 +772,11 @@ const routes = {
   sign_out: signout,
   chat : chat,
   make_post: makePost,
+  make_post_wall: makePostWall,
   make_comment: makeComment,
   get_comments: getComments,
   get_posts: getPosts,
+  get_posts_wall: getPostsWall,
   get_posts_by_author: getPostsByAuthor,
   render_wall: renderWall,
   io_on : io_on,

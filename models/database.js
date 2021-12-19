@@ -219,6 +219,9 @@ const makePost = function(author, content, callback) {
       },
       "likes": {
         "N": "0"
+      },
+      "isWall": {
+        "S": author
       }
     }
   };
