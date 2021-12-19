@@ -219,7 +219,8 @@
         } else {
           $.post("/makepost", data, function(x) {
             if (x.success) {
-              window.location.assign("/feed");
+              getPosts();
+              document.getElementById("make-post-text").value = "";
             } else {
                 alert(x.msg);
             }
