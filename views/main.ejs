@@ -122,12 +122,12 @@
               alert("You cannot make an empty comment.");
             } else {
               $.post("/makecomment", data, function(x) {
-                  if (x.success) {
-                    getPosts(); // REPLACE LATER WITH NON-RELOAD FUNCTION
-                  } else {
-                    alert(x.msg);
-                  }
-                });
+                if (x.success) {
+                  getPosts(); // REPLACE LATER WITH NON-RELOAD FUNCTION
+                } else {
+                  alert(x.msg);
+                }
+              });
             }
           });
         });

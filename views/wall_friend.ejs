@@ -127,18 +127,18 @@
         });
 
         $("#remove-friend-button").click(function(event) {
-        event.preventDefault();
-        const toSend = {
-            friend: user
-        };
-        $.post("/addfriend", toSend, function(x) {
-            if (x.success) {
-                location.reload();
-            } else {
-                alert(x.msg);
-            }
-        })
-      });
+          event.preventDefault();
+          const toSend = {
+              friend: user
+          };
+          $.post("/removefriend", toSend, function(x) {
+              if (x.success) {
+                  location.reload();
+              } else {
+                  alert(x.msg);
+              }
+          })
+        });
       });
     });
   </script>

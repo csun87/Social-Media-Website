@@ -43,6 +43,7 @@ app.post("/getposts", routes.get_posts);
 app.post("/getpostsbyauthor", routes.get_posts_by_author);
 app.get("/wall", routes.render_wall);
 app.post("/addfriend", routes.add_friend);
+app.post("/removefriend", routes.remove_friend);
 app.post("/makecomment", routes.make_comment);
 app.post("/getcomments", routes.get_comments);
 app.get("/settings", routes.get_settings);
