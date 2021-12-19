@@ -989,26 +989,87 @@ const initVisualization = function(req, res) {
       res.send({"id": req.session.username, "name": "", "children": [], "data": []});
     } else {
       json.name = data.Items[0].firstname.S;
-      console.log(json);
-      db.get_friends(req.session.username, function(err, data) {
+      db.get_friends(req.session.username, function(err, friends) {
         if (err) {
           res.send(json);
         } else {
+          var docClient = new AWS.DynamoDB.DocumentClient();
           const promises = [];
-          const friends = data.Items[0].friends.SS;
+          friends = friends.Items[0].friends.SS;
           friends.forEach(function(friend) {
             if (friend === req.session.username) {
               return;
             }
-            db.login_lookup(friend, function(err, x) {
-              if (err) {
-
-              } else {
-                json.children.push({"id": friend, "name": x.Items[0].firstname.S, "data": [], "children": []});
+            const fParams = {
+              TableName: "users",
+              KeyConditionExpression: "username = :x",
+              ProjectionExpression: "firstname",
+              ExpressionAttributeValues: {
+                ":x": friend
               }
-            });
+            };
+            promises.push(docClient.query(fParams).promise().then(
+              function(data) {
+                return {username: friend, firstname: data.Items[0].firstname};
+              },
+              function(err) {
+                console.error("Unable to query. Error: ", JSON.stringify(err, null, 2));
+              }
+            ))
           });
+          Promise.all(promises).then(function(x) {
+            x.forEach(function(name) {
+              json.children.push({"id": name.username, "name": name.firstname, "children": [], "data": []});
+            });
+            res.send(json);
+          });
+        }
+      });
+    }
+  });
+}
+
+const updateVisualization = function(req, res) {
+  var json = {"id": req.params.user, "name": "", "children": [], "data": []};
+  db.login_lookup(req.params.user, function(err, data) {
+    if (err) {
+      res.send(json);
+    } else {
+      json.name = data.Items[0].firstname.S;
+      db.get_friends(req.params.user, function(err, friends) {
+        if (err) {
           res.send(json);
+        } else {
+          var docClient = new AWS.DynamoDB.DocumentClient();
+          const promises = [];
+          friends = friends.Items[0].friends.SS;
+          friends.forEach(function(friend) {
+            if (friend === req.params.user) {
+              return;
+            }
+            const fParams = {
+              TableName: "users",
+              KeyConditionExpression: "username = :x",
+              ProjectionExpression: "firstname",
+              ExpressionAttributeValues: {
+                ":x": friend
+              }
+            };
+            promises.push(docClient.query(fParams).promise().then(
+              function(y) {
+                return {username: friend, firstname: y.Items[0].firstname};
+              },
+              function(err) {
+                console.error("Unable to query. Error: ", JSON.stringify(err, null, 2));
+              }
+            ))
+          });
+          Promise.all(promises).then(function(x) {
+            x.forEach(function(name) {
+              json.children.push({"id": name.username, "name": name.firstname, "children": [], "data": []});
+            });
+            res.send(json);
+          });
         }
       });
     }
@@ -1048,6 +1109,7 @@ const routes = {
   get_last_action: getLastAction,
   get_visualizer: getVisualizer,
   init_visualization: initVisualization,
+  update_visualization: updateVisualization,
 };
 
 module.exports = routes;

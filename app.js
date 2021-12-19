@@ -61,6 +61,7 @@ app.get("/search", routes.get_search);
 app.post("/searchscan", routes.search_scan);
 app.get("/visualizer", routes.get_visualizer);
 app.get("/friendvisualization", routes.init_visualization);
+app.get("/getFriends/:user", routes.update_visualization);
 io.on('connection', routes.io_on);
 
 http.listen(8080, function() {
