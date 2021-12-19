@@ -135,9 +135,9 @@
     }
 
     function refreshPosts() {
-        getPosts();
-        setTimeout(refreshPosts, 15000);
-      }
+      getPosts();
+      setTimeout(refreshPosts, 15000);
+    }
 
     $(document).ready(function() {
       $("#wall-nav-bar").attr("href", "/wall?username=<%= username %>");

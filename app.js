@@ -54,10 +54,10 @@ app.get("/search", routes.get_search);
 app.post("/searchscan", routes.search_scan);
 io.on('connection', routes.io_on);
 
-http.listen(8081, function() {
+http.listen(8080, function() {
    console.log("Welcome to PennBook, Team G13's NETS-212 final project!");
    console.log('Authors: Christian Sun (chsun), Kishen Sivabalan (kishens), Belinda Xi (belindax), & William Fan (willfan)');
-   console.log("HTTP server started on port 8080! Go to http://localhost:8080\n\n");
+   console.log("HTTP server started on port 8080! Go to http://localhost:8080");
 });
 
 

@@ -48,6 +48,9 @@
       </nav>
     </div>
     <div id="user-info"></div>
+    <div id="remove-friend-button-container">
+      <button id="remove-friend-button" class="btn btn-primary">Remove Friend</button>
+  </div>
     <div id="post-box" style="width: 80%; height: 80%; align-self: center;">
       <form id="make-post-form">
         <div class="form-group">
@@ -122,6 +125,20 @@
             });
           });
         });
+
+        $("#remove-friend-button").click(function(event) {
+        event.preventDefault();
+        const toSend = {
+            friend: user
+        };
+        $.post("/addfriend", toSend, function(x) {
+            if (x.success) {
+                location.reload();
+            } else {
+                alert(x.msg);
+            }
+        })
+      });
       });
     });
   </script>

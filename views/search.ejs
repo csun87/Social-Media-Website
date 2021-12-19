@@ -60,23 +60,33 @@
     </div>
   </body>
   <script>
-    $(document).ready(function() {
-        $("#search-text").change(function() {
-            const text = document.getElementById("search-text").value;
-            const data = {
-                text: text
-            };
-            $.post("/searchscan", data, function(x) {
-                if (x.data) {
-                    var str = "<h3>Search Suggestions</h3>";
-                    x.data.Items.forEach(function(item) {
-                        console.log(item);
-                        str = str + '<p><a href="/wall?username=' + item.username.S + '">' + item.firstname.S + ' ' + item.lastname.S + '</a></p>';
-                    });
-                    $("#suggestions").html(str);
-                }
-            });
+    function refresh() {
+      suggest();
+      setTimeout(refresh, 1000);
+    }
+
+    var prev = "";
+    function suggest() {
+      const text = document.getElementById("search-text").value;
+      if (prev !== text) {
+        prev = text;
+        const data = {
+          text: text
+        };
+        $.post("/searchscan", data, function(x) {
+          if (x.data) {
+            var str = "<h3>Search Suggestions</h3>";
+              x.data.Items.forEach(function(item) {
+                str = str + '<p><a href="/wall?username=' + item.username.S + '">' + item.firstname.S + ' ' + item.lastname.S + '</a></p>';
+              });
+              $("#suggestions").html(str);
+          }
         });
+      }
+    }
+
+    $(document).ready(function() {
+      refresh();
     });
   </script>
 </html>
