@@ -972,6 +972,49 @@ const getSearch = function(req, res) {
   }
 }
 
+// VISUALIZER ROUTES
+
+const getVisualizer = function(req, res) {
+  if (req.session.username) {
+    res.render("friendvisualizer.ejs");
+  } else {
+    res.redirect("/");
+  }
+}
+
+const initVisualization = function(req, res) {
+  var json = {"id": req.session.username, "name": "", "children": [], "data": []};
+  db.login_lookup(req.session.username, function(err, data) {
+    if (err) {
+      res.send({"id": req.session.username, "name": "", "children": [], "data": []});
+    } else {
+      json.name = data.Items[0].firstname.S;
+      console.log(json);
+      db.get_friends(req.session.username, function(err, data) {
+        if (err) {
+          res.send(json);
+        } else {
+          const promises = [];
+          const friends = data.Items[0].friends.SS;
+          friends.forEach(function(friend) {
+            if (friend === req.session.username) {
+              return;
+            }
+            db.login_lookup(friend, function(err, x) {
+              if (err) {
+
+              } else {
+                json.children.push({"id": friend, "name": x.Items[0].firstname.S, "data": [], "children": []});
+              }
+            });
+          });
+          res.send(json);
+        }
+      });
+    }
+  });
+}
+
 const routes = {
   get_login_page: renderLogin,
   get_user: getUser,
@@ -1003,6 +1046,8 @@ const routes = {
   add_friend: addFriend,
   remove_friend: removeFriend,
   get_last_action: getLastAction,
+  get_visualizer: getVisualizer,
+  init_visualization: initVisualization,
 };
 
 module.exports = routes;

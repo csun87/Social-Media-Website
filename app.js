@@ -2,10 +2,12 @@ const express = require('express');
 const sessions = require('express-session');
 const database = require('./models/database.js');
 const routes = require('./routes/routes.js');
+var path = require('path');
+var serveStatic = require('serve-static');
 var app = express();
 
 app.use(express.urlencoded());
-
+app.use(serveStatic(path.join(__dirname, 'public')));
 var session = sessions({
    secret: 'ajxkciwjio2oSIFKcjSKWO*@#kdjC)Sk2jSkco',
    resave: false,
@@ -57,6 +59,8 @@ app.post("/changeaffiliation", routes.change_affiliation);
 app.post("/changeinterests", routes.change_interests);
 app.get("/search", routes.get_search);
 app.post("/searchscan", routes.search_scan);
+app.get("/visualizer", routes.get_visualizer);
+app.get("/friendvisualization", routes.init_visualization);
 io.on('connection', routes.io_on);
 
 http.listen(8080, function() {
