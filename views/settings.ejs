@@ -124,6 +124,7 @@
   <script>
     const user = "<%= username %>";
     $(document).ready(function() {
+        $("#wall-nav-bar").attr("href", "/wall?username=<%= username %>");
         $("#current-info").append("<h1>" + user + "'s Settings</h1>");
 
         $("#change-email").submit(function(event) {
@@ -174,7 +175,7 @@
             } else {
                 $.post("/changeaffiliation", data, function(x) {
                     if (x.success) {
-                        document.getElementById("new-affilitation").value = "";
+                        document.getElementById("new-affiliation").value = "";
                         alert("Successfully changed affiliation!");
                     } else {
                         alert(x.msg);

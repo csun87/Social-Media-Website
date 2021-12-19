@@ -227,6 +227,33 @@ const makePost = function(author, content, callback) {
   });
 }
 
+const makePostToWall = function(author, content, recipient, callback) {
+  const date = new Date().getTime();
+  const params = {
+    TableName: "posts",
+    Item: {
+      "author": {
+        "S": author
+      },
+      "timestamp": {
+        "N": date.toString()
+      },
+      "content": {
+        "S": content
+      },
+      "likes": {
+        "N": "0"
+      },
+      "isWall": {
+        "S": recipient
+      }
+    }
+  };
+  db.putItem(params, function(err, data) {
+    callback(err, data);
+  });
+}
+
 const getPostsByAuthor = function(author, callback) {
   const params = {
     TableName: "posts",
@@ -329,6 +356,36 @@ const addFriend = function(sender, receiver, callback) {
         ExpressionAttributeValues: {
           ":y": {"SS": [sender]}
         },
+      };
+      db.updateItem(params2, callback);
+    }
+  });
+}
+
+const removeFriend = function(sender, receiver, callback) {
+  const params = {
+    TableName: "friends",
+    Key: {
+      "username": {"S": sender}
+    },
+    UpdateExpression: "DELETE friends :x",
+    ExpressionAttributeValues: {
+      ":x": {"SS": [receiver]}
+    }
+  };
+  db.updateItem(params, function(err, data) {
+    if (err) {
+      callback(err, data);
+    } else {
+      const params2 = {
+        TableName: "friends",
+        Key: {
+          "username": {"S": receiver}
+        },
+        UpdateExpression: "DELETE friends :x",
+        ExpressionAttributeValues: {
+          ":x": {"SS": [sender]}
+        }
       };
       db.updateItem(params2, callback);
     }
@@ -534,11 +591,13 @@ const database = {
   addMessage : addMessage,
   deleteMessage : deleteMessage,
   make_post: makePost,
+  make_post_to_wall: makePostToWall,
   get_posts_and_comments: getPostsAndComments,
   get_posts_by_author: getPostsByAuthor,
   get_friends: getFriends,
   check_friends: checkFriends,
   add_friend: addFriend,
+  remove_friend: removeFriend,
   get_comments: getComments,
   make_comment: makeComment,
   get_Messages : getAllMessages,

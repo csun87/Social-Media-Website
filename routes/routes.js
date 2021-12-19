@@ -2,7 +2,6 @@ const fs = require("fs");
 const crypto = require("crypto");
 var db = require('../models/database.js');
 const AWS = require("aws-sdk");
-const { brotliCompressSync } = require("zlib");
 
 const renderLogin = function(req, res) {
   if (req.session.username) {
@@ -78,10 +77,10 @@ const checkLogin = function(req, res) {
             msg: null
           });
       } else {
-          res.send({
-            success: false,
-            msg: "This username/password combination was not found"
-          });
+        res.send({
+          success: false,
+          msg: "This username/password combination was not found"
+        });
       }
     });
   }
@@ -182,12 +181,22 @@ const changeAffiliation = function(req, res) {
     if (err) {
       res.send({
         success: false,
-        msg: "Unsuccessful"
+        msg: JSON.stringify(err, null, 2)
       });
     } else {
-      res.send({
-        success: true,
-        msg: null
+      const content = "I changed my affiliation to " + req.body.newAffiliation + "!";
+      db.make_post(req.session.username, content, function(err, data) {
+        if (err) {
+          res.send({
+            success: false,
+            msg: JSON.stringify(err, null, 2)
+          });
+        } else {
+          res.send({
+            success: true,
+            msg: null
+          });
+        }
       });
     }
   });
@@ -202,12 +211,26 @@ const changeInterests = function(req, res) {
     if (err) {
       res.send({
         success: false,
-        msg: "Unsuccessful"
+        msg: JSON.stringify(err, null, 2)
       });
     } else {
-      res.send({
-        success: true,
-        msg: null
+      var content = "I am now interested in ";
+      for (var i = 0; i < req.body.newInterests.length - 1; ++i) {
+        content += req.body.newInterests[i] + ", ";
+      }
+      content += "and " + req.body.newInterests[req.body.newInterests.length - 1] + "!";
+      db.make_post(req.session.username, content, function(err, data) {
+        if (err) {
+          res.send({
+            success: false,
+            msg: JSON.stringify(err, null, 2)
+          });
+        } else {
+          res.send({
+            success: true,
+            msg: null
+          });
+        }
       });
     }
   });
@@ -222,7 +245,7 @@ const searchScan = function(req, res) {
     if (err) {
       res.send({
         success: false,
-        msg: "Unsuccessful"
+        msg: JSON.stringify(err, null, 2)
       });
     } else {
       res.send({
@@ -243,6 +266,26 @@ const signout = function(req, res) {
 const addFriend = function(req, res) {
   if (req.session.username) {
     db.add_friend(req.session.username, req.body.friend, function(err, data) {
+      if (err) {
+        return res.send({
+          success: false,
+          msg: JSON.stringify(err, null, 2)
+        });
+      } else {
+        return res.send({
+          success: true,
+          msg: null
+        });
+      }
+    });
+  } else {
+    res.redirect("/");
+  }
+}
+
+const removeFriend = function(req, res) {
+  if (req.session.username) {
+    db.remove_friend(req.session.username, req.body.friend, function(err, data) {
       if (err) {
         return res.send({
           success: false,
@@ -702,7 +745,8 @@ const routes = {
   get_searchnews: getSearchNews,
   get_search: getSearch,
   search_scan: searchScan,
-  add_friend: addFriend
+  add_friend: addFriend,
+  remove_friend: removeFriend
 };
 
 module.exports = routes;
