@@ -27,6 +27,7 @@ const loginLookup = function(username, callback) {
 }
 
 const addUser = function(username, password, firstname, lastname, email, affiliation, birthday, interests, callback) {
+  const time = new Date().getTime();
   const params = {
     TableName: "users",
     Item: {
@@ -53,6 +54,9 @@ const addUser = function(username, password, firstname, lastname, email, affilia
       },
       "interests": {
         "SS": interests
+      },
+      "lastAction": {
+        "N": time.toString()
       }
       /*,
       "chats": {
@@ -87,6 +91,39 @@ const addUser = function(username, password, firstname, lastname, email, affilia
       });
     }
   });
+}
+
+const logLastAction = function(username, callback) {
+  const time = new Date().getTime();
+  const params = {
+    TableName: "users",
+    Key: {
+      "username": {
+        "S": username
+      }
+    },
+    UpdateExpression: "SET lastAction = :x",
+    ExpressionAttributeValues: {
+      ":x": {
+        "N": time.toString()
+      }
+    }
+  }
+  db.updateItem(params, callback);
+}
+
+const getLastAction = function(username, callback) {
+  const params = {
+    TableName: "users",
+    KeyConditionExpression: "username = :x",
+    ExpressionAttributeValues: {
+      ":x": {
+        "S": username
+      }
+    },
+    ProjectionExpression: "lastAction"
+  };
+  db.query(params, callback);
 }
 
 const changeAffiliation = function(username, newAffiliation, callback) {
@@ -219,6 +256,9 @@ const makePost = function(author, content, callback) {
       },
       "likes": {
         "N": "0"
+      },
+      "isWall": {
+        "S": author
       }
     }
   };
@@ -540,12 +580,18 @@ const addRoom = function(username, newRoomName, callback) {
     } else {
       callback(err, data);
 
+      var rooms;
+
+      if (data.Items[0].rooms != null) {
+        rooms = data.Items[0].rooms.L
+
+        console.log(rooms);
+        rooms.push({"S": newRoomName})
+      } else {
+        rooms = [{"S": newRoomName}]
+      }
+
       
-
-      var rooms = data.Items[0].rooms.L
-
-      console.log(rooms);
-      rooms.push({"S": newRoomName})
 
       console.log(rooms)
 
@@ -574,9 +620,68 @@ const addRoom = function(username, newRoomName, callback) {
   
 }
 
+const addInvite = function(username, recepient, callback) {
+
+  const params = {
+    TableName: 'users',
+    KeyConditionExpression: '#y = :x',
+    ExpressionAttributeNames: {
+      '#y': 'username'
+    },
+    ExpressionAttributeValues: {
+      ':x': {
+        'S': recepient
+      }
+    }
+  };
+  db.query(params, function(err, data) {
+    if (err || data.Items.length == 0) {
+      callback(err, null);
+    } else {
+      callback(err, data);
+
+      var invites;
+
+      if (data.Items[0].chatInvites != null) {
+        invites = data.Items[0].chatInvites.L
+
+        console.log(rooms);
+        invites.push({"S": username})
+      } else {
+        invites = [{"S": username}]
+      }
+
+
+      const params = {
+        TableName: "users",
+        Key: {
+          "username": {
+            "S": recepient
+          }
+        },
+        UpdateExpression: "set chatInvites = :x",
+        ExpressionAttributeValues: {
+          ":x": {
+            "L": invites
+          }
+        }
+      };
+      db.updateItem(params, function(err, data) {
+        callback(err, data);
+      });
+
+
+    }
+  });
+
+  
+}
+
 const database = {
   login_lookup: loginLookup,
   add_user: addUser,
+  log_last_action: logLastAction,
+  get_last_action: getLastAction,
   update_affiliation: changeAffiliation,
   update_email: changeEmail,
   update_password: changePassword,
@@ -595,7 +700,8 @@ const database = {
   get_comments: getComments,
   make_comment: makeComment,
   get_Messages : getAllMessages,
-  add_room : addRoom
+  add_room : addRoom,
+  add_invite : addInvite
 };
 
 module.exports = database;

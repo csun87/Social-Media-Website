@@ -2,6 +2,7 @@ const fs = require("fs");
 const crypto = require("crypto");
 var db = require('../models/database.js');
 const AWS = require("aws-sdk");
+const { resolveSoa } = require("dns");
 
 const renderLogin = function(req, res) {
   if (req.session.username) {
@@ -26,9 +27,21 @@ const renderWall = function(req, res) {
       } else {
         const friends = data.Items[0].friends.SS;
         if (friends && friends.includes(page)) {
-          res.render("wall_friend.ejs", {});
+          db.log_last_action(req.session.username, function(err, data) {
+            if (err) {
+              console.error(JSON.stringify(err, null, 2));
+            } else {
+              res.render("wall_friend.ejs", {});
+            }
+          });
         } else {
-          res.render("wall_stranger.ejs", {});
+          db.log_last_action(req.session.username, function(err, data) {
+            if (err) {
+              console.error(JSON.stringify(err, null, 2));
+            } else {
+              res.render("wall_stranger.ejs", {});
+            }
+          });
         }
       }
     });
@@ -40,6 +53,55 @@ const renderWall = function(req, res) {
 const getUser = function(req, res) {
   const username = req.body.username;
   db.login_lookup(username, function(err, data) {
+    if (err) {
+      res.send({
+        success: false,
+        msg: JSON.stringify(err, null, 2)
+      });
+    } else {
+      res.send({
+        success: true,
+        data: data.Items[0]
+      });
+    }
+  });
+}
+
+const getLastAction = function(req, res) {
+  const username = req.body.username;
+  db.get_last_action(username, function(err, data) {
+    if (err) {
+      res.send({
+        success: false,
+        msg: JSON.stringify(err, null, 2)
+      });
+    } else {
+      const lastAction = data.Items[0].lastAction;
+      if (!lastAction) {
+        res.send({
+          success: true,
+          data: false
+        });
+      } else {
+        const currentTime = new Date();
+        if (currentTime.getTime() - lastAction.N <= 300000) {
+          res.send({
+            success: true,
+            data: true
+          });
+        } else {
+          res.send({
+            success: true,
+            data: false
+          });
+        }
+      }
+    }
+  });
+}
+
+const getFriends = function(req, res) {
+  db.get_friends(req.session.username, function(err, data) {
     if (err) {
       res.send({
         success: false,
@@ -72,9 +134,15 @@ const checkLogin = function(req, res) {
         });
       } else if (data && data.Items[0].password.S === hashed) { // Username was found in table and password is a match
           req.session.username = username; // Creates username in the session
-          res.send({
-            success: true,
-            msg: null
+          db.log_last_action(req.session.username, function(err, data) {
+            if (err) {
+              console.error(JSON.stringify(err, null, 2));
+            } else {
+              res.send({
+                success: true,
+                msg: null
+              });
+            }
           });
       } else {
         res.send({
@@ -88,7 +156,13 @@ const checkLogin = function(req, res) {
 
 const getFeed = function(req, res) {
   if (req.session.username) {
-    res.render("main.ejs", {});
+    db.log_last_action(req.session.username, function(err, data) {
+      if (err) {
+        console.error(JSON.stringify(err, null, 2));
+      } else {
+        res.render("main.ejs", {});
+      }
+    });
   } else {
     res.redirect("/login");
   }
@@ -143,9 +217,15 @@ const changeEmail = function(req, res) {
         msg: "Unsuccessful"
       });
     } else {
-      return res.send({
-        success: true,
-        msg: null
+      db.log_last_action(req.session.username, function(err, data) {
+        if (err) {
+          console.error(JSON.stringify(err, null, 2));
+        } else {
+          res.send({
+            success: true,
+            msg: null
+          });
+        }
       });
     }
   });
@@ -164,9 +244,15 @@ const changePassword = function(req, res) {
         msg: "Unsuccessful"
       });
     } else {
-      res.send({
-        success: true,
-        msg: null
+      db.log_last_action(req.session.username, function(err, data) {
+        if (err) {
+          console.error(JSON.stringify(err, null, 2));
+        } else {
+          res.send({
+            success: true,
+            msg: null
+          });
+        }
       });
     }
   });
@@ -192,9 +278,15 @@ const changeAffiliation = function(req, res) {
             msg: JSON.stringify(err, null, 2)
           });
         } else {
-          res.send({
-            success: true,
-            msg: null
+          db.log_last_action(req.session.username, function(err, data) {
+            if (err) {
+              console.error(JSON.stringify(err, null, 2));
+            } else {
+              res.send({
+                success: true,
+                msg: null
+              });
+            }
           });
         }
       });
@@ -226,9 +318,15 @@ const changeInterests = function(req, res) {
             msg: JSON.stringify(err, null, 2)
           });
         } else {
-          res.send({
-            success: true,
-            msg: null
+          db.log_last_action(req.session.username, function(err, data) {
+            if (err) {
+              console.error(JSON.stringify(err, null, 2));
+            } else {
+              res.send({
+                success: true,
+                msg: null
+              });
+            }
           });
         }
       });
@@ -272,9 +370,15 @@ const addFriend = function(req, res) {
           msg: JSON.stringify(err, null, 2)
         });
       } else {
-        return res.send({
-          success: true,
-          msg: null
+        db.log_last_action(req.session.username, function(err, data) {
+          if (err) {
+            console.error(JSON.stringify(err, null, 2));
+          } else {
+            res.send({
+              success: true,
+              msg: null
+            });
+          }
         });
       }
     });
@@ -292,9 +396,15 @@ const removeFriend = function(req, res) {
           msg: JSON.stringify(err, null, 2)
         });
       } else {
-        return res.send({
-          success: true,
-          msg: null
+        db.log_last_action(req.session.username, function(err, data) {
+          if (err) {
+            console.error(JSON.stringify(err, null, 2));
+          } else {
+            res.send({
+              success: true,
+              msg: null
+            });
+          }
         });
       }
     });
@@ -312,9 +422,41 @@ const makePost = function(req, res) {
           msg: JSON.stringify(err, null, 2)
         });
       } else {
+        db.log_last_action(req.session.username, function(err, data) {
+          if (err) {
+            console.error(JSON.stringify(err, null, 2));
+          } else {
+            res.send({
+              success: true,
+              msg: null
+            });
+          }
+        });
+      }
+    });
+  } else {
+    res.redirect("/");
+  }
+}
+
+const makePostWall = function(req, res) {
+  if (req.session.username) {
+    db.make_post_to_wall(req.session.username, req.body.content, req.body.recipient, function(err, data) {
+      if (err) {
         return res.send({
-          success: true,
-          msg: null
+          success: false,
+          msg: JSON.stringify(err, null, 2)
+        });
+      } else {
+        db.log_last_action(req.session.username, function(err, data) {
+          if (err) {
+            console.error(JSON.stringify(err, null, 2));
+          } else {
+            res.send({
+              success: true,
+              msg: null
+            });
+          }
         });
       }
     });
@@ -341,6 +483,83 @@ const getPosts = function(req, res) {
               KeyConditionExpression: "author = :x",
               ExpressionAttributeValues: {
                 ":x": friend
+              }
+            };
+            promises.push(docClient.query(params).promise().then(
+              function(data) {
+                return data.Items;
+              },
+              function(err) {
+                console.error("Unable to query. Error: ", JSON.stringify(err, null, 2));
+              }
+            ));
+          });
+        });
+        Promise.all(promises).then(function(a) {
+          const commentPromises = [];
+          a.forEach(function(b) {
+            b.forEach(function(data) {
+              const key = data.author + "$" + data.timestamp;
+              const commentParams = {
+                TableName: "reactions",
+                KeyConditionExpression: "authortime = :x",
+                ExpressionAttributeValues: {
+                  ":x": key
+                }
+              };
+              commentPromises.push(docClient.query(commentParams).promise().then(
+                function(x) {
+                  data.comments = x.Items;
+                  return data;
+                },
+                function(err) {
+                  console.error("Unable to query. Error: ", JSON.stringify(err, null, 2));
+                }
+              ));
+            });
+          });
+          Promise.all(commentPromises).then(function(output) {
+            return res.send({
+              success: true,
+              data: output,
+              msg: null
+            });
+          });
+        },
+        function(err) {
+          return res.send({
+            success: false,
+            data: null,
+            msg: JSON.stringify(err, null, 2)
+          });
+        });
+      }
+    });
+  } else {
+    res.redirect("/");
+  }
+}
+
+const getPostsWall = function(req, res) {
+  if (req.session.username) {
+    db.get_friends(req.body.user, function(err, data) {
+      if (err) {
+        return res.send({
+          success: false,
+          msg: JSON.stringify(err, null, 2)
+        });
+      } else {
+        var docClient = new AWS.DynamoDB.DocumentClient();
+        const promises = [];
+        data.Items.forEach(function(item) {
+          item.friends.SS.forEach(function(friend) {
+            const params = {
+              TableName: "posts",
+              KeyConditionExpression: "author = :x",
+              FilterExpression: "isWall = :y",
+              ExpressionAttributeValues: {
+                ":x": friend,
+                ":y": req.body.user
               }
             };
             promises.push(docClient.query(params).promise().then(
@@ -427,9 +646,15 @@ const makeComment = function(req, res) {
           msg: JSON.stringify(err, null, 2)
         });
       } else {
-        return res.send({
-          success: true,
-          msg: null
+        db.log_last_action(req.session.username, function(err, data) {
+          if (err) {
+            console.error(JSON.stringify(err, null, 2));
+          } else {
+            res.send({
+              success: true,
+              msg: null
+            });
+          }
         });
       }
     });
@@ -477,10 +702,12 @@ const io_on = function(socket) {
   console.log(socket.handshake.session);
 
   var r;
+  var invs;
   //get rooms
   db.login_lookup(socket.handshake.session.username, function(err, data) {
     console.log(data.Items[0].rooms.L);
     r = data.Items[0].rooms.L
+    invs = data.Items[0].chatInvites.L;
 
     //Getting all messages on page load
     db.get_Messages(r[0].s, function(err,data) {
@@ -493,6 +720,7 @@ const io_on = function(socket) {
         var moreData = {
           user : socket.handshake.session.username,
           rooms : r,
+          invites: invs,
           currentRoom : r[0].S
         }
         send.push(data);
@@ -551,9 +779,11 @@ const io_on = function(socket) {
   socket.on("change room", arg => {
 
     var r;
+    var invs;
     db.login_lookup(socket.handshake.session.username, function(err, data) {
       console.log(data);
       r = data.Items[0].rooms.L
+      invs = data.Items[0].chatInvites.L;
 
       db.get_Messages(arg, function(err,data) {
         if(err) {
@@ -565,6 +795,7 @@ const io_on = function(socket) {
            var moreData = {
              user : socket.handshake.session.username,
              rooms : r,
+             invites : invs,
              currentRoom : arg
            }
            send.push(data);
@@ -577,48 +808,128 @@ const io_on = function(socket) {
     })
   })
 
-  //sort room id to make sure unique
+
+  //make invites disappear
+  //fix invites duplicating
+  //add people to existing chats
   //sort messages
-  //front end + front end
+  //leave rooms
+  //front end + vront end
+
+  socket.on("sendInvite", arg => {
+    db.check_friends(socket.handshake.session.username, function(err, da) {
+
+      var t = da.Items[0].friends.SS;
+      console.log(da.Items[0].friends.SS);
+      console.log(arg.message)
+
+      var u = t.includes(arg.message);
+
+      if (u) {
+        db.login_lookup(socket.handshake.session.username, function(err, d) {
+          var invExists = false;
+
+          if (d.Items[0].chatInvites != null) {
+            invList = d.Items[0].rooms.L
+            invList.forEach(x=>{
+              if(x.S == arg.message) {
+                invExists = true;
+              }
+            })
+          }   
+          if(!invExists) {
+            //add invite for the recepient
+            db.add_invite(socket.handshake.session.username, arg.message, function(err,dat){
+              console.log(dat)
+            })
+          }
+        })
+
+      }
+      
+    })
+  })
+
 
   socket.on("addRoom", arg => {
 
     console.log(arg);
-    var o = arg.message.split(",");
-    console.log(o);
+    var o = arg.message.split(",")
+    o.push(socket.handshake.session.username)
+    o.sort();
+    var p = o.join();
+
+
+    console.log(p);
 
     console.log("Adding room " + arg)
-/*
-    var r;
+    db.check_friends(socket.handshake.session.username, function(err, da) {
 
-    db.add_room(socket.handshake.session.username, arg.message, function(err,dat){
-      console.log(dat)
+      var t = da.Items[0].friends.SS;
+      console.log(da.Items[0].friends.SS);
+      console.log(o)
 
-      db.login_lookup(socket.handshake.session.username, function(err, data) {
-        console.log(data);
-        r = data.Items[0].rooms.L
-
-        db.get_Messages(arg, function(err,data) {
-          if(err) {
-            console.log(err)
-          } else {
-            console.log(data);
-            var send = []
-      
-            var moreData = {
-              user : socket.handshake.session.username,
-              rooms : r,
-              currentRoom : arg
-            }
-            send.push(data);
-            send.push(moreData)
-            //console.log(send)
-            socket.emit('prev_messages', send);
-    
+      //check if all friends exist
+      var u = o.every(x => t.includes(x));
+      if (u) {
+        //check if room exists
+        db.login_lookup(socket.handshake.session.username, function(err, d) {
+          var roomExists = false;
+          var roomList = d.Items[0].rooms.L
+          roomList.forEach(x=>{
+            if(x.S == p) {
+              roomExists = true;
             }
           })
-      })
-    }*/
+          if(!roomExists) {
+            //add for current user
+            db.add_room(socket.handshake.session.username, p, function(err,dat){
+              //add this for every other person
+              o.forEach(x=>{
+                if (x != socket.handshake.session.username) {
+                  db.add_room(x, p, function(err,dat){
+                    if (err) {
+                      console.log(err);
+                    }
+                  })
+                }
+              })
+              console.log(dat)
+              db.login_lookup(socket.handshake.session.username, function(err, data) {
+                console.log(data);
+                var r = data.Items[0].rooms.L
+                var invs = data.Items[0].rooms.L
+        
+                db.get_Messages(p, function(err,data) {
+                  if(err) {
+                    console.log(err)
+                  } else {
+                    console.log(data);
+                    var send = []
+              
+                    var moreData = {
+                      user : socket.handshake.session.username,
+                      rooms : r,
+                      invites : invs,
+                      currentRoom : arg.room
+                    }
+                    send.push(data);
+                    send.push(moreData)
+                    //console.log(send)
+                    socket.emit('prev_messages', send);
+            
+                    }
+                  })
+              })
+            })
+
+          }
+
+        })
+      } else {
+        //include some error message
+      }
+    }) 
   })  
 
 }
@@ -664,6 +975,7 @@ const getSearch = function(req, res) {
 const routes = {
   get_login_page: renderLogin,
   get_user: getUser,
+  get_friends: getFriends,
   check_login: checkLogin,
   get_signup_page: renderSignup,
   signup_user: signupUser,
@@ -675,9 +987,11 @@ const routes = {
   sign_out: signout,
   chat : chat,
   make_post: makePost,
+  make_post_wall: makePostWall,
   make_comment: makeComment,
   get_comments: getComments,
   get_posts: getPosts,
+  get_posts_wall: getPostsWall,
   get_posts_by_author: getPostsByAuthor,
   render_wall: renderWall,
   io_on : io_on,
@@ -687,7 +1001,8 @@ const routes = {
   get_search: getSearch,
   search_scan: searchScan,
   add_friend: addFriend,
-  remove_friend: removeFriend
+  remove_friend: removeFriend,
+  get_last_action: getLastAction,
 };
 
 module.exports = routes;

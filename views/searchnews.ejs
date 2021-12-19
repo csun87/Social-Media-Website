@@ -48,4 +48,9 @@
       </nav>
     </div>
   </body>
+  <script>
+    $(document).ready(function() {
+      $("#wall-nav-bar").attr("href", "/wall?username=<%= username %>");
+    });
+  </script>
 </html>

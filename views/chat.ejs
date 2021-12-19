@@ -82,9 +82,16 @@
   <div class="col-lg-6 col-sm-12 left">
     <form id="roomForm" action="" class="flex">
       <input id = "inputRoom" autocomplete="off" type="text" class = "form-control" placeholder="Add a new chat room..."> </br> 
-      <button type="button" class="btn btn-sm btn-secondary btn-lg">Send</button>
+      <button type="button" class="btn btn-sm btn-secondary btn-lg">Create</button>
+    </form>
+    <form id="inviteRoomForm" action="" class="flex">
+      <input id = "inviteInputRoom" autocomplete="off" type="text" class = "form-control" placeholder="Invite someone to this chat..."> </br> 
+      <button type="button" class="btn btn-sm btn-secondary btn-lg">Invite</button>
     </form>
     <ul class = "roomList" id = "rooms">
+
+    </ul>
+    <ul class = "inviteList" id = "invites">
 
     </ul>
   </div>
@@ -121,8 +128,10 @@
   var rooms = document.getElementById('rooms');
   var roomForm = document.getElementById('roomForm');
   var roomFormInput = document.getElementById('inputRoom');
+  var invites = document.getElementById('invites');
   var messageList = []
   var roomList = []
+  var inviteList = []
   var currentRoom
 
   socket.on('chat message', function(msg) {
@@ -163,6 +172,39 @@
     })
 
     currentRoom = msg[1].currentRoom;
+
+    msg[1].invites.forEach(x=> {
+      var item = document.createElement('li');
+      item.innerHTML += '<form id="'+ x.S +'" action="" class="flex">'+x.S+'<input id = "'+x.S+'_" class = "form-control" placeholder="Yes to accept, No to decline."></form>'
+      console.log(item.innerHTML)
+
+      invites.appendChild(item);
+      inviteList.push(item);
+
+      var invId = document.getElementById(x.S);
+
+      var invIdValue = document.getElementById(x.S+"_");
+
+
+      invId.addEventListener('submit', function(e) {
+        e.preventDefault();
+        console.log("add room")
+        if (invIdValue.value == "yes") {
+          console.log(x.S)
+          //console.log(invIdValue.value)
+
+        var send = {
+          message : x.S,
+          room : currentRoom
+        }
+        //socket.emit("sendInvite", send);
+        socket.emit('addRoom', send);
+        //invId.innerHTML = '';
+
+    }
+    });
+
+    })
 
 
     
@@ -230,6 +272,7 @@
         message : inputRoom.value,
         room : currentRoom
       }
+      socket.emit("sendInvite", send);
       socket.emit('addRoom', send);
       input.value = '';
     }
