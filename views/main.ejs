@@ -8,6 +8,19 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@200&display=swap" rel="stylesheet"> 
     <style>
+      navbar{
+        background: #4267B2;
+      }
+      .form-control {
+        border-radius: 10px;
+        margin-bottom: 5px;
+      }
+      .form-control:hover{
+        background-color: #f0f0f0;
+      }
+      .form-control:focus{
+        background-color: #f0f0f0;
+      }
       .card{
         border-radius: 10px;
         width: 500px;
@@ -28,12 +41,72 @@
       .comment-card{
         background: #f7f7f7;
         width: 350px;
+        font-size: 12px;
         border-radius: 5px;
         margin-top: 2px;
         margin-bottom: 2px;
         padding: 5px;
+        margin-left: 20px;
         box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.3);
         border: 1px solid #DCDCDC;
+        padding: 10px;
+      }
+      .card-subtitle{
+        font-weight: bold;
+        font-family: Helvetica, sans-serif;
+        font-size: 12px;
+        padding: 0px;
+      }
+      .form-group{
+        margin-left: 10px;
+      }
+  
+      .btn {
+        width: 100px;
+        padding: auto;
+        font-family: Helvetica, sans-serif;
+        color: white;
+        border-radius: 3px;
+        box-shadow: none;
+        border-radius:3px;
+        border: none;
+        position: relative;
+        transition: all .25s ease-in-out;
+      }
+      .sendcomment-button:hover{
+        background-color: #0066ff;
+      }
+      .friends-list{
+        width: 20%;
+        float: right;
+        margin-top: 0px;
+        margin: 20px;
+        padding:5px;
+        position: absolute;
+        position: fixed;
+        right:0;
+      }
+      ul {
+        width: 25%;
+        padding:0;
+        background-color: #eeeded;
+        position: fixed;
+        height: 100%;
+      }
+      li a {
+        display: block;
+        text-decoration: none;
+        color: #000;
+        padding: 20px 20px;
+        
+      }
+
+      li a.active {
+        background-color: #4260e7;
+      }
+
+      li a:hover:not(.active) {
+        background-color: #555;
       }
       body{
         background: #f8f8f8;
@@ -43,7 +116,10 @@
       }
     </style>
   </head>
+
+
   <body>
+    <!--
     <div>
       <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <span class="navbar-brand" href="#" style="padding-left: 10px">PennBook</span>
@@ -85,21 +161,59 @@
         </div>
       </nav>
     </div>
-    <div class = "card" id="post-box">
+    -->
+    <ul>
+      <li class="nav-item disabled">
+        <a class="nav-link" href="/feed">Feed</a>
+      </li>
+      <li class="nav-item">
+        <a id="wall-nav-bar" class="nav-link" href="/wall">Wall</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/chat">Chat</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/visualizer">Visualizer</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/settings">Settings</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/search">Search</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/newsfeed">News</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/searchnews">Search News</a>
+    </li>
+    <li class="nav-item active">
+      <a class="nav-link" href="/signout">Sign Out</a>
+    </li>
+    </ul>
+    <div id="friends" class = "friends-list">
+      <h2>Friends</h2>
+      <ul id="friends-list">
+      </ul>
+    </div>
+    <div class = "card flexbox" id="post-box">
       <form id="make-post-form">
         <div class="form-group">
           <input id="make-post-text" type="text" class="form-control" id="make-post-text" placeholder="Write a post here">
         </div style="width=400px; padding: 10px; margin: auto">
-        <input id="make-post-button" type="submit" class="btn btn-primary" value="Make Post">
+        <input id="make-post-button" type="submit" class="btn btn-primary" 
+          style="margin-left: 10px; width: 468px; border-radius: 5px" value="Make Post">
       </form>
     </div>
+    <!--btn btn-primary   display: inline-block; -->
     <div class="things" style="display: flex">
-      <div id="posts" class="container" style="display: inline-block"></div>
-      <div id="friends" class="container" style="display: inline-block">
+      <div id="posts" style="margin: 0 auto; padding: 0px"></div>
+      <!--<div id="friends" class="container" style="display: inline-block; margin-right: 0; width: 20%; padding: 0px">
         <h2>Friends</h2>
         <ul id="friends-list">
         </ul>
-      </div>
+      </div>-->
+      
     </div>
   </body>
   <script>
@@ -143,12 +257,13 @@
             text = text + '<h6 class="card-subtitle mb-2 text-muted">' + cDateString + '</h6>';
             text = text + '<p class="card-text">' + comment.content + '</p></div>';
           });
+          
           const commentFormId = 'make-comment-form-' + post.author + "$" + post.timestamp;
           text = text + '<form id="' + commentFormId + '">'  
             + '<div class="form-group">'
             + '<input id="' + post.author + "$" + post.timestamp + '-make-comment-text" type="text" class="form-control" placeholder="Enter comment">'
             + '</div>'
-            + '<input id="make-comment-button" type="submit" class="btn btn-primary" value="Post comment">'
+            + '<input id="make-comment-button" type="submit" class="btn btn-primary" value="Post">'
             + '</form>'
             + '</div></div>';
           str += text;
@@ -192,7 +307,7 @@
           $.post("/getlastaction", {username: friend}, function(x) {
             const isLoggedIn = x.data;
             if (isLoggedIn) {
-              $("#friends-list").append("<li>" + friend + " || ONLINE</li>");
+              $("#friends-list").append("<li>" + friend + " || ONLINE</li>").css('background-color', '#000');
             } else {
               $("#friends-list").append("<li>" + friend + " || OFFLINE</li>");
             }
