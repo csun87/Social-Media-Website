@@ -82,9 +82,16 @@
   <div class="col-lg-6 col-sm-12 left">
     <form id="roomForm" action="" class="flex">
       <input id = "inputRoom" autocomplete="off" type="text" class = "form-control" placeholder="Add a new chat room..."> </br> 
-      <button type="button" class="btn btn-sm btn-secondary btn-lg">Send</button>
+      <button type="button" class="btn btn-sm btn-secondary btn-lg">Create</button>
+    </form>
+    <form id="inviteRoomForm" action="" class="flex">
+      <input id = "inviteInputRoom" autocomplete="off" type="text" class = "form-control" placeholder="Invite someone to this chat..."> </br> 
+      <button type="button" class="btn btn-sm btn-secondary btn-lg">Invite</button>
     </form>
     <ul class = "roomList" id = "rooms">
+
+    </ul>
+    <ul class = "inviteList" id = "invites">
 
     </ul>
   </div>
@@ -121,6 +128,7 @@
   var rooms = document.getElementById('rooms');
   var roomForm = document.getElementById('roomForm');
   var roomFormInput = document.getElementById('inputRoom');
+  var invites = document.getElementById('invites');
   var messageList = []
   var roomList = []
   var currentRoom
@@ -230,6 +238,7 @@
         message : inputRoom.value,
         room : currentRoom
       }
+      socket.emit("sendInvite", send);
       socket.emit('addRoom', send);
       input.value = '';
     }

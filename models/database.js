@@ -483,12 +483,18 @@ const addRoom = function(username, newRoomName, callback) {
     } else {
       callback(err, data);
 
+      var rooms;
+
+      if (data.Items[0].rooms != null) {
+        rooms = data.Items[0].rooms.L
+
+        console.log(rooms);
+        rooms.push({"S": newRoomName})
+      } else {
+        rooms = [{"S": newRoomName}]
+      }
+
       
-
-      var rooms = data.Items[0].rooms.L
-
-      console.log(rooms);
-      rooms.push({"S": newRoomName})
 
       console.log(rooms)
 
