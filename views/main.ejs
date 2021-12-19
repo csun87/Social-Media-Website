@@ -3,7 +3,7 @@
   <head>
     <title>PennBook</title>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+    <!--<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">-->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@200&display=swap" rel="stylesheet"> 
@@ -11,8 +11,7 @@
       .card{
         border-radius: 10px;
         width: 500px;
-        background-color: white;
-        font-family: 'Source Sans Pro', sans-serif;
+        font-family: 'Helvetica';
         border: 1px solid #DCDCDC;
         margin: auto;
         margin-top: 10px;
@@ -38,6 +37,12 @@
       }
       body{
         background: #f8f8f8;
+      }
+      html {
+          height: 100%;
+      }
+      body {
+        background: #32CD32 !important;
       }
     </style>
   </head>
@@ -91,7 +96,14 @@
         <input id="make-post-button" type="submit" class="btn btn-primary" value="Make Post">
       </form>
     </div>
-    <div id="posts" class="container"></div>
+    <div class="things" style="display: flex">
+      <div id="posts" class="container" style="display: inline-block"></div>
+      <div id="friends" class="container" style="display: inline-block">
+        <h2>Friends</h2>
+        <ul id="friends-list">
+        </ul>
+      </div>
+    </div>
   </body>
   <script>
     function submitComment(event) {
@@ -172,12 +184,33 @@
       });
     }
 
+    function getFriends() {
+      const username = "<%= username %>";
+      $.post("/getfriends", {}, function(x) {
+        const friends = x.data.friends.SS;
+        friends.forEach(function(friend) {
+          if (friend === username) {
+            return;
+          }
+          $.post("/getlastaction", {username: friend}, function(x) {
+            const isLoggedIn = x.data;
+            if (isLoggedIn) {
+              $("#friends-list").append("<li>" + friend + " || ONLINE</li>");
+            } else {
+              $("#friends-list").append("<li>" + friend + " || OFFLINE</li>");
+            }
+          });
+        });
+      });
+    }
+
     function refreshPosts() {
       getPosts();
       setTimeout(refreshPosts, 15000);
     }
 
     $(document).ready(function() {
+      getFriends();
       $("#wall-nav-bar").attr("href", "/wall?username=<%= username %>");
       $("#make-post-form").submit(function(event) {
         event.preventDefault();
