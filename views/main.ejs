@@ -18,6 +18,26 @@
         margin-top: 10px;
         margin-bottom: 10px;
         padding: 10px;
+        box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.3);
+      }
+      .card-title{
+        font-family: Helvetica, sans-serif;
+      }
+      .card-text{
+        font-family: Helvetica, sans-serif;
+      }
+      .comment-card{
+        background: #f7f7f7;
+        width: 350px;
+        border-radius: 5px;
+        margin-top: 2px;
+        margin-bottom: 2px;
+        padding: 5px;
+        box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.3);
+        border: 1px solid #DCDCDC;
+      }
+      body{
+        background: #f8f8f8;
       }
     </style>
   </head>
@@ -109,9 +129,10 @@
             '<hr/></p></div>';
           post.comments.forEach(function(comment) {
             const commentDate = new Date(parseInt(comment.timestamp));
-            text = text + '<h5 class="card-subtitle">' + comment.author + '</h5>';
-            text = text + '<h6 class="card-subtitle mb-2 text-muted">' + commentDate.toString() + '</h6>';
-            text = text + '<p class="card-text">' + comment.content + '</p>';
+            var cDateString = commentDate.toString().substring(4, 21);
+            text = text + '<div class = "comment-card"><h5 class="card-subtitle">' + comment.author + '</h5>';
+            text = text + '<h6 class="card-subtitle mb-2 text-muted">' + cDateString + '</h6>';
+            text = text + '<p class="card-text">' + comment.content + '</p></div>';
           });
           const commentFormId = 'make-comment-form-' + post.author + "$" + post.timestamp;
           text = text + '<form id="' + commentFormId + '">'  
