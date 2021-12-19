@@ -574,10 +574,12 @@ const io_on = function(socket) {
   console.log(socket.handshake.session);
 
   var r;
+  var invs;
   //get rooms
   db.login_lookup(socket.handshake.session.username, function(err, data) {
     console.log(data.Items[0].rooms.L);
     r = data.Items[0].rooms.L
+    invs = data.Items[0].chatInvites.L;
 
     //Getting all messages on page load
     db.get_Messages(r[0].s, function(err,data) {
@@ -590,6 +592,7 @@ const io_on = function(socket) {
         var moreData = {
           user : socket.handshake.session.username,
           rooms : r,
+          invites: invs,
           currentRoom : r[0].S
         }
         send.push(data);
@@ -648,9 +651,11 @@ const io_on = function(socket) {
   socket.on("change room", arg => {
 
     var r;
+    var invs;
     db.login_lookup(socket.handshake.session.username, function(err, data) {
       console.log(data);
       r = data.Items[0].rooms.L
+      invs = data.Items[0].chatInvites.L;
 
       db.get_Messages(arg, function(err,data) {
         if(err) {
@@ -662,6 +667,7 @@ const io_on = function(socket) {
            var moreData = {
              user : socket.handshake.session.username,
              rooms : r,
+             invites : invs,
              currentRoom : arg
            }
            send.push(data);
@@ -674,48 +680,128 @@ const io_on = function(socket) {
     })
   })
 
-  //sort room id to make sure unique
+
+  //make invites disappear
+  //fix invites duplicating
+  //add people to existing chats
   //sort messages
-  //front end + front end
+  //leave rooms
+  //front end + vront end
+
+  socket.on("sendInvite", arg => {
+    db.check_friends(socket.handshake.session.username, function(err, da) {
+
+      var t = da.Items[0].friends.SS;
+      console.log(da.Items[0].friends.SS);
+      console.log(arg.message)
+
+      var u = t.includes(arg.message);
+
+      if (u) {
+        db.login_lookup(socket.handshake.session.username, function(err, d) {
+          var invExists = false;
+
+          if (d.Items[0].chatInvites != null) {
+            invList = d.Items[0].rooms.L
+            invList.forEach(x=>{
+              if(x.S == arg.message) {
+                invExists = true;
+              }
+            })
+          }   
+          if(!invExists) {
+            //add invite for the recepient
+            db.add_invite(socket.handshake.session.username, arg.message, function(err,dat){
+              console.log(dat)
+            })
+          }
+        })
+
+      }
+      
+    })
+  })
+
 
   socket.on("addRoom", arg => {
 
     console.log(arg);
-    var o = arg.message.split(",");
-    console.log(o);
+    var o = arg.message.split(",")
+    o.push(socket.handshake.session.username)
+    o.sort();
+    var p = o.join();
+
+
+    console.log(p);
 
     console.log("Adding room " + arg)
-/*
-    var r;
+    db.check_friends(socket.handshake.session.username, function(err, da) {
 
-    db.add_room(socket.handshake.session.username, arg.message, function(err,dat){
-      console.log(dat)
+      var t = da.Items[0].friends.SS;
+      console.log(da.Items[0].friends.SS);
+      console.log(o)
 
-      db.login_lookup(socket.handshake.session.username, function(err, data) {
-        console.log(data);
-        r = data.Items[0].rooms.L
-
-        db.get_Messages(arg, function(err,data) {
-          if(err) {
-            console.log(err)
-          } else {
-            console.log(data);
-            var send = []
-      
-            var moreData = {
-              user : socket.handshake.session.username,
-              rooms : r,
-              currentRoom : arg
-            }
-            send.push(data);
-            send.push(moreData)
-            //console.log(send)
-            socket.emit('prev_messages', send);
-    
+      //check if all friends exist
+      var u = o.every(x => t.includes(x));
+      if (u) {
+        //check if room exists
+        db.login_lookup(socket.handshake.session.username, function(err, d) {
+          var roomExists = false;
+          var roomList = d.Items[0].rooms.L
+          roomList.forEach(x=>{
+            if(x.S == p) {
+              roomExists = true;
             }
           })
-      })
-    }*/
+          if(!roomExists) {
+            //add for current user
+            db.add_room(socket.handshake.session.username, p, function(err,dat){
+              //add this for every other person
+              o.forEach(x=>{
+                if (x != socket.handshake.session.username) {
+                  db.add_room(x, p, function(err,dat){
+                    if (err) {
+                      console.log(err);
+                    }
+                  })
+                }
+              })
+              console.log(dat)
+              db.login_lookup(socket.handshake.session.username, function(err, data) {
+                console.log(data);
+                var r = data.Items[0].rooms.L
+                var invs = data.Items[0].rooms.L
+        
+                db.get_Messages(p, function(err,data) {
+                  if(err) {
+                    console.log(err)
+                  } else {
+                    console.log(data);
+                    var send = []
+              
+                    var moreData = {
+                      user : socket.handshake.session.username,
+                      rooms : r,
+                      invites : invs,
+                      currentRoom : arg.room
+                    }
+                    send.push(data);
+                    send.push(moreData)
+                    //console.log(send)
+                    socket.emit('prev_messages', send);
+            
+                    }
+                  })
+              })
+            })
+
+          }
+
+        })
+      } else {
+        //include some error message
+      }
+    }) 
   })  
 
 }
