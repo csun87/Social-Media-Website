@@ -580,6 +580,63 @@ const addRoom = function(username, newRoomName, callback) {
   
 }
 
+const addInvite = function(username, recepient, callback) {
+
+  const params = {
+    TableName: 'users',
+    KeyConditionExpression: '#y = :x',
+    ExpressionAttributeNames: {
+      '#y': 'username'
+    },
+    ExpressionAttributeValues: {
+      ':x': {
+        'S': recepient
+      }
+    }
+  };
+  db.query(params, function(err, data) {
+    if (err || data.Items.length == 0) {
+      callback(err, null);
+    } else {
+      callback(err, data);
+
+      var invites;
+
+      if (data.Items[0].chatInvites != null) {
+        invites = data.Items[0].chatInvites.L
+
+        console.log(rooms);
+        invites.push({"S": username})
+      } else {
+        invites = [{"S": username}]
+      }
+
+
+      const params = {
+        TableName: "users",
+        Key: {
+          "username": {
+            "S": recepient
+          }
+        },
+        UpdateExpression: "set chatInvites = :x",
+        ExpressionAttributeValues: {
+          ":x": {
+            "L": invites
+          }
+        }
+      };
+      db.updateItem(params, function(err, data) {
+        callback(err, data);
+      });
+
+
+    }
+  });
+
+  
+}
+
 const database = {
   login_lookup: loginLookup,
   add_user: addUser,
@@ -601,7 +658,8 @@ const database = {
   get_comments: getComments,
   make_comment: makeComment,
   get_Messages : getAllMessages,
-  add_room : addRoom
+  add_room : addRoom,
+  add_invite : addInvite
 };
 
 module.exports = database;
