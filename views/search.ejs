@@ -24,7 +24,7 @@
               <a class="nav-link" href="/chat">Chat</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="#">Visualizer</a>
+              <a class="nav-link" href="/visualizer">Visualizer</a>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="/settings">Settings</a>
@@ -86,6 +86,7 @@
     }
 
     $(document).ready(function() {
+      $("#wall-nav-bar").attr("href", "/wall?username=<%= username %>");
       refresh();
     });
   </script>

@@ -24,7 +24,7 @@
               <a class="nav-link" href="/chat">Chat</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="#">Visualizer</a>
+              <a class="nav-link" href="/visualizer">Visualizer</a>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="/settings">Settings</a>
@@ -60,7 +60,70 @@
   </body>
   <script>
     const user = new URLSearchParams(window.location.search).get("username");
+
+    function getPosts() {
+      $.post("/getpostswall", {user: user}, function(output) {
+        const form_ids = [];
+        const posts = output.data;
+        posts.sort((x, y) => y.timestamp - x.timestamp);
+        var str = "";
+        posts.forEach(function(post) {
+          const date = new Date(post.timestamp);
+          var text = '<div class="card" style="width: 18rem;"><div class="card-body"><h5 class="card-title">' + post.author + 
+            '</h5><h6 class="card-subtitle mb-2 text-muted">' + date.toString() + 
+            '</h6><p class="card-text">' + post.content + 
+            '</p></div>';
+          post.comments.forEach(function(comment) {
+            const commentDate = new Date(parseInt(comment.timestamp));
+            text = text + '<h5 class="card-subtitle">' + comment.author + '</h5>';
+            text = text + '<h6 class="card-subtitle mb-2 text-muted">' + commentDate.toString() + '</h6>';
+            text = text + '<p class="card-text">' + comment.content + '</p>';
+          });
+          const commentFormId = 'make-comment-form-' + post.author + "$" + post.timestamp;
+          text = text + '<form id="' + commentFormId + '">'  
+            + '<div class="form-group">'
+            + '<input id="' + post.author + "$" + post.timestamp + '-make-comment-text" type="text" class="form-control" placeholder="Enter comment">'
+            + '</div>'
+            + '<input id="make-comment-button" type="submit" class="btn btn-primary" value="Post comment">'
+            + '</form>'
+            + '</div></div>';
+          str += text;
+          form_ids.push(commentFormId);
+        });
+        $("#posts").html(str);
+        form_ids.forEach(function(id) {
+          var temp = '#' + id;
+          const key = temp.substring(19);
+          temp = temp.replace(/\$/g, "\\$");
+          $(temp).submit(function(event) {
+            event.preventDefault();
+            const data = {
+              key: key,
+              content: document.getElementById(key + '-make-comment-text').value
+            };
+            if (data.content.length === 0) {
+              alert("You cannot make an empty comment.");
+            } else {
+              $.post("/makecomment", data, function(x) {
+                if (x.success) {
+                  getPosts(); // REPLACE LATER WITH NON-RELOAD FUNCTION
+                } else {
+                  alert(x.msg);
+                }
+              });
+            }
+          });
+        });
+      });
+    }
+
+    function refreshPosts() {
+      getPosts();
+      setTimeout(refreshPosts, 15000);
+    }
+
     $(document).ready(function() {
+      getPosts();
       $("#wall-nav-bar").attr("href", "/wall?username=<%= username %>");
       $.post("/getuser", {username: user}, function(x) {
         const data = x.data;
@@ -69,59 +132,23 @@
         $(document).attr("title", data.firstname.S + " " + data.lastname.S);
       });
 
-      $.post("/getpostsbyauthor", {author: user}, function(out) {
-        const posts = []
-        out.data.sort(function(x, y) {
-          return y.timestamp.N - x.timestamp.N;
-        })
-        out.data.forEach(function(post) {
-          var p = post.author.S + "$" + post.timestamp.N.toString();
-          const date = new Date(parseInt(post.timestamp.N));
-          var post = '<div class="card" style="width: 18rem;"><div class="card-body"><h5 class="card-title">' + post.author.S + 
-            '</h5><h6 class="card-subtitle mb-2 text-muted">' + date.toString() + 
-              '</h6><p class="card-text">' + post.content.S + 
-                '</p></div>';
-          const commentsData = {
-            authortime : p
-          }
-          $.post("/getcomments", commentsData, function(comments) {
-            comments.data.Items.forEach(function(comment) {
-              const commentDate = new Date(parseInt(comment.timestamp.N));
-              post = post + '<h5 class="card-subtitle">' + comment.author.S + '</h5>';
-              post = post + '<h6 class="card-subtitle mb-2 text-muted">' + commentDate.toString() + '</h6>';
-              post = post + '<p class="card-text">' + comment.content.S + '</p>';
-            });
-            const commentFormId = 'make-comment-form-' + p;
-            post = post + '<form id="' + commentFormId + '">'  
-              + '<div class="form-group">'
-              + '<input id="' + p + '-make-comment-text" type="text" class="form-control" placeholder="Enter comment">'
-              + '</div>'
-              + '<input id="make-comment-button" type="submit" class="btn btn-primary" value="Post comment">'
-              + '</form>'
-              + '</div>';
-            $("#posts").append(post + "</div>");
-            var temp = '#' + commentFormId;
-            temp = temp.replace(/\$/g, "\\$");
-            $(temp).submit(function(event) {
-              event.preventDefault();
-              const data = {
-                key: p,
-                content: document.getElementById(p + '-make-comment-text').value,
-              };
-              if (data.content.length === 0) {
-                alert("You cannot make an empty comment");
-              } else {
-                $.post("/makecomment", data, function(x) {
-                  if (x.success) {
-                    location.reload(); // REPLACE LATER WITH NON-RELOAD FUNCTION THAT DYNAMICALLY REFRESHES PAGE
-                  } else {
-                    alert(x.msg);
-                  }
-                });
-              }
-            });
+      $("#make-post-form").submit(function(event) {
+        event.preventDefault();
+        const data = {
+          recipient: user,
+          content: document.getElementById("make-post-text").value
+        }
+        if (data.content.length === 0) {
+          alert("You cannot make an empty post");
+        } else {
+          $.post("/makepostwall", data, function(x) {
+            if (x.success) {
+              getPosts();
+            } else {
+              alert(x.msg);
+            }
           });
-        });
+        }
       });
     });
   </script>

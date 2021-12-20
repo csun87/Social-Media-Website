@@ -2,6 +2,8 @@ const fs = require("fs");
 const crypto = require("crypto");
 var db = require('../models/database.js');
 const AWS = require("aws-sdk");
+const { resolveSoa } = require("dns");
+const { check_friends } = require("../models/database.js");
 
 const renderLogin = function(req, res) {
   if (req.session.username) {
@@ -26,9 +28,21 @@ const renderWall = function(req, res) {
       } else {
         const friends = data.Items[0].friends.SS;
         if (friends && friends.includes(page)) {
-          res.render("wall_friend.ejs", {});
+          db.log_last_action(req.session.username, function(err, data) {
+            if (err) {
+              console.error(JSON.stringify(err, null, 2));
+            } else {
+              res.render("wall_friend.ejs", {});
+            }
+          });
         } else {
-          res.render("wall_stranger.ejs", {});
+          db.log_last_action(req.session.username, function(err, data) {
+            if (err) {
+              console.error(JSON.stringify(err, null, 2));
+            } else {
+              res.render("wall_stranger.ejs", {});
+            }
+          });
         }
       }
     });
@@ -40,6 +54,55 @@ const renderWall = function(req, res) {
 const getUser = function(req, res) {
   const username = req.body.username;
   db.login_lookup(username, function(err, data) {
+    if (err) {
+      res.send({
+        success: false,
+        msg: JSON.stringify(err, null, 2)
+      });
+    } else {
+      res.send({
+        success: true,
+        data: data.Items[0]
+      });
+    }
+  });
+}
+
+const getLastAction = function(req, res) {
+  const username = req.body.username;
+  db.get_last_action(username, function(err, data) {
+    if (err) {
+      res.send({
+        success: false,
+        msg: JSON.stringify(err, null, 2)
+      });
+    } else {
+      const lastAction = data.Items[0].lastAction;
+      if (!lastAction) {
+        res.send({
+          success: true,
+          data: false
+        });
+      } else {
+        const currentTime = new Date();
+        if (currentTime.getTime() - lastAction.N <= 300000) {
+          res.send({
+            success: true,
+            data: true
+          });
+        } else {
+          res.send({
+            success: true,
+            data: false
+          });
+        }
+      }
+    }
+  });
+}
+
+const getFriends = function(req, res) {
+  db.get_friends(req.session.username, function(err, data) {
     if (err) {
       res.send({
         success: false,
@@ -72,9 +135,15 @@ const checkLogin = function(req, res) {
         });
       } else if (data && data.Items[0].password.S === hashed) { // Username was found in table and password is a match
           req.session.username = username; // Creates username in the session
-          res.send({
-            success: true,
-            msg: null
+          db.log_last_action(req.session.username, function(err, data) {
+            if (err) {
+              console.error(JSON.stringify(err, null, 2));
+            } else {
+              res.send({
+                success: true,
+                msg: null
+              });
+            }
           });
       } else {
         res.send({
@@ -88,7 +157,13 @@ const checkLogin = function(req, res) {
 
 const getFeed = function(req, res) {
   if (req.session.username) {
-    res.render("main.ejs", {});
+    db.log_last_action(req.session.username, function(err, data) {
+      if (err) {
+        console.error(JSON.stringify(err, null, 2));
+      } else {
+        res.render("main.ejs", {});
+      }
+    });
   } else {
     res.redirect("/login");
   }
@@ -143,9 +218,15 @@ const changeEmail = function(req, res) {
         msg: "Unsuccessful"
       });
     } else {
-      return res.send({
-        success: true,
-        msg: null
+      db.log_last_action(req.session.username, function(err, data) {
+        if (err) {
+          console.error(JSON.stringify(err, null, 2));
+        } else {
+          res.send({
+            success: true,
+            msg: null
+          });
+        }
       });
     }
   });
@@ -164,9 +245,15 @@ const changePassword = function(req, res) {
         msg: "Unsuccessful"
       });
     } else {
-      res.send({
-        success: true,
-        msg: null
+      db.log_last_action(req.session.username, function(err, data) {
+        if (err) {
+          console.error(JSON.stringify(err, null, 2));
+        } else {
+          res.send({
+            success: true,
+            msg: null
+          });
+        }
       });
     }
   });
@@ -192,9 +279,15 @@ const changeAffiliation = function(req, res) {
             msg: JSON.stringify(err, null, 2)
           });
         } else {
-          res.send({
-            success: true,
-            msg: null
+          db.log_last_action(req.session.username, function(err, data) {
+            if (err) {
+              console.error(JSON.stringify(err, null, 2));
+            } else {
+              res.send({
+                success: true,
+                msg: null
+              });
+            }
           });
         }
       });
@@ -226,9 +319,15 @@ const changeInterests = function(req, res) {
             msg: JSON.stringify(err, null, 2)
           });
         } else {
-          res.send({
-            success: true,
-            msg: null
+          db.log_last_action(req.session.username, function(err, data) {
+            if (err) {
+              console.error(JSON.stringify(err, null, 2));
+            } else {
+              res.send({
+                success: true,
+                msg: null
+              });
+            }
           });
         }
       });
@@ -272,9 +371,15 @@ const addFriend = function(req, res) {
           msg: JSON.stringify(err, null, 2)
         });
       } else {
-        return res.send({
-          success: true,
-          msg: null
+        db.log_last_action(req.session.username, function(err, data) {
+          if (err) {
+            console.error(JSON.stringify(err, null, 2));
+          } else {
+            res.send({
+              success: true,
+              msg: null
+            });
+          }
         });
       }
     });
@@ -292,9 +397,15 @@ const removeFriend = function(req, res) {
           msg: JSON.stringify(err, null, 2)
         });
       } else {
-        return res.send({
-          success: true,
-          msg: null
+        db.log_last_action(req.session.username, function(err, data) {
+          if (err) {
+            console.error(JSON.stringify(err, null, 2));
+          } else {
+            res.send({
+              success: true,
+              msg: null
+            });
+          }
         });
       }
     });
@@ -312,9 +423,41 @@ const makePost = function(req, res) {
           msg: JSON.stringify(err, null, 2)
         });
       } else {
+        db.log_last_action(req.session.username, function(err, data) {
+          if (err) {
+            console.error(JSON.stringify(err, null, 2));
+          } else {
+            res.send({
+              success: true,
+              msg: null
+            });
+          }
+        });
+      }
+    });
+  } else {
+    res.redirect("/");
+  }
+}
+
+const makePostWall = function(req, res) {
+  if (req.session.username) {
+    db.make_post_to_wall(req.session.username, req.body.content, req.body.recipient, function(err, data) {
+      if (err) {
         return res.send({
-          success: true,
-          msg: null
+          success: false,
+          msg: JSON.stringify(err, null, 2)
+        });
+      } else {
+        db.log_last_action(req.session.username, function(err, data) {
+          if (err) {
+            console.error(JSON.stringify(err, null, 2));
+          } else {
+            res.send({
+              success: true,
+              msg: null
+            });
+          }
         });
       }
     });
@@ -341,6 +484,83 @@ const getPosts = function(req, res) {
               KeyConditionExpression: "author = :x",
               ExpressionAttributeValues: {
                 ":x": friend
+              }
+            };
+            promises.push(docClient.query(params).promise().then(
+              function(data) {
+                return data.Items;
+              },
+              function(err) {
+                console.error("Unable to query. Error: ", JSON.stringify(err, null, 2));
+              }
+            ));
+          });
+        });
+        Promise.all(promises).then(function(a) {
+          const commentPromises = [];
+          a.forEach(function(b) {
+            b.forEach(function(data) {
+              const key = data.author + "$" + data.timestamp;
+              const commentParams = {
+                TableName: "reactions",
+                KeyConditionExpression: "authortime = :x",
+                ExpressionAttributeValues: {
+                  ":x": key
+                }
+              };
+              commentPromises.push(docClient.query(commentParams).promise().then(
+                function(x) {
+                  data.comments = x.Items;
+                  return data;
+                },
+                function(err) {
+                  console.error("Unable to query. Error: ", JSON.stringify(err, null, 2));
+                }
+              ));
+            });
+          });
+          Promise.all(commentPromises).then(function(output) {
+            return res.send({
+              success: true,
+              data: output,
+              msg: null
+            });
+          });
+        },
+        function(err) {
+          return res.send({
+            success: false,
+            data: null,
+            msg: JSON.stringify(err, null, 2)
+          });
+        });
+      }
+    });
+  } else {
+    res.redirect("/");
+  }
+}
+
+const getPostsWall = function(req, res) {
+  if (req.session.username) {
+    db.get_friends(req.body.user, function(err, data) {
+      if (err) {
+        return res.send({
+          success: false,
+          msg: JSON.stringify(err, null, 2)
+        });
+      } else {
+        var docClient = new AWS.DynamoDB.DocumentClient();
+        const promises = [];
+        data.Items.forEach(function(item) {
+          item.friends.SS.forEach(function(friend) {
+            const params = {
+              TableName: "posts",
+              KeyConditionExpression: "author = :x",
+              FilterExpression: "isWall = :y",
+              ExpressionAttributeValues: {
+                ":x": friend,
+                ":y": req.body.user
               }
             };
             promises.push(docClient.query(params).promise().then(
@@ -427,9 +647,15 @@ const makeComment = function(req, res) {
           msg: JSON.stringify(err, null, 2)
         });
       } else {
-        return res.send({
-          success: true,
-          msg: null
+        db.log_last_action(req.session.username, function(err, data) {
+          if (err) {
+            console.error(JSON.stringify(err, null, 2));
+          } else {
+            res.send({
+              success: true,
+              msg: null
+            });
+          }
         });
       }
     });
@@ -850,9 +1076,177 @@ const getSearch = function(req, res) {
   }
 }
 
+// VISUALIZER ROUTES
+
+const getVisualizer = function(req, res) {
+  if (req.session.username) {
+    res.render("friendvisualizer.ejs");
+  } else {
+    res.redirect("/");
+  }
+}
+
+const initVisualization = function(req, res) {
+  var json = {"id": req.session.username, "name": "", "children": [], "data": []};
+  db.login_lookup(req.session.username, function(err, data) {
+    if (err) {
+      res.send({"id": req.session.username, "name": "", "children": [], "data": []});
+    } else {
+      json.name = data.Items[0].firstname.S;
+      db.get_friends(req.session.username, function(err, friends) {
+        if (err) {
+          res.send(json);
+        } else {
+          var docClient = new AWS.DynamoDB.DocumentClient();
+          const promises = [];
+          friends = friends.Items[0].friends.SS;
+          friends.forEach(function(friend) {
+            if (friend === req.session.username) {
+              return;
+            }
+            const fParams = {
+              TableName: "users",
+              KeyConditionExpression: "username = :x",
+              ProjectionExpression: "firstname",
+              ExpressionAttributeValues: {
+                ":x": friend
+              }
+            };
+            promises.push(docClient.query(fParams).promise().then(
+              function(data) {
+                return {username: friend, firstname: data.Items[0].firstname};
+              },
+              function(err) {
+                console.error("Unable to query. Error: ", JSON.stringify(err, null, 2));
+              }
+            ))
+          });
+          Promise.all(promises).then(function(x) {
+            x.forEach(function(name) {
+              json.children.push({"id": name.username, "name": name.firstname, "children": [], "data": []});
+            });
+            res.send(json);
+          });
+        }
+      });
+    }
+  });
+}
+
+const updateVisualization = function(req, res) {
+  var json = {"id": req.params.user, "name": "", "children": [], "data": []};
+  db.login_lookup(req.params.user, function(err, data) {
+    if (err) {
+      res.send(json);
+    } else {
+      json.name = data.Items[0].firstname.S;
+      db.get_friends(req.params.user, function(err, friends) {
+        if (err) {
+          res.send(json);
+        } else {
+          var docClient = new AWS.DynamoDB.DocumentClient();
+          const promises = [];
+          friends = friends.Items[0].friends.SS;
+          const checkPermsPromises = [];
+          const checkFriends = {
+            TableName: "friends",
+            KeyConditionExpression: "username = :x",
+            ProjectionExpression: "friends",
+            ExpressionAttributeValues: {
+              ":x": req.session.username
+            }
+          };
+          const affiliationParams = {
+            TableName: "users",
+            KeyConditionExpression: "username = :x",
+            ProjectionExpression: "affiliation",
+            ExpressionAttributeValues: {
+              ":x": req.session.username
+            }
+          };
+          checkPermsPromises.push(docClient.query(checkFriends).promise().then(
+            function(y) {
+              return y.Items[0].friends.values;
+            },
+            function(err) {
+              console.error("Unable to query. Error: ", JSON.stringify(err, null, 2));
+            }
+          ));
+          checkPermsPromises.push(docClient.query(affiliationParams).promise().then(
+            function(y) {
+              return y.Items[0].affiliation;
+            },
+            function(err) {
+              console.error("Unable to query. Error: ", JSON.stringify(err, null, 2));
+            }
+          ));
+          Promise.all(checkPermsPromises).then(function(x) {
+            const userPromises = [];
+            friends.forEach(function(friend) {
+              if (!x[0].includes(friend)) {
+                const affParams = {
+                  TableName: "users",
+                  KeyConditionExpression: "username = :x",
+                  ProjectionExpression: "username, affiliation",
+                  ExpressionAttributeValues: {
+                    ":x": friend
+                  }
+                };
+                userPromises.push(docClient.query(affParams).promise().then(
+                  function(y) {
+                    return y.Items[0];
+                  },
+                  function(err) {
+                    console.error("Unable to query. Error: ", JSON.stringify(err, null, 2));
+                  }
+                ));
+              }
+            });
+            Promise.all(userPromises).then(function(z) {
+              z.forEach(function(item) {
+                if (item.affiliation !== x[1]) {
+                  friends.splice(friends.indexOf(item.username), 1);
+                }
+              });
+              friends.forEach(function(friend) {
+                if (friend === req.params.user) {
+                  return;
+                }
+                const fParams = {
+                  TableName: "users",
+                  KeyConditionExpression: "username = :x",
+                  ProjectionExpression: "firstname",
+                  ExpressionAttributeValues: {
+                    ":x": friend
+                  }
+                };
+                promises.push(docClient.query(fParams).promise().then(
+                  function(y) {
+                    return {username: friend, firstname: y.Items[0].firstname};
+                  },
+                  function(err) {
+                    console.error("Unable to query. Error: ", JSON.stringify(err, null, 2));
+                  }
+                ))
+              });
+              Promise.all(promises).then(function(x) {
+                x.forEach(function(name) {
+                  json.children.push({"id": name.username, "name": name.firstname, "children": [], "data": []});
+                });
+                res.send(json);
+              });
+            });
+          });
+        }
+      });
+    }
+  });
+}
+
 const routes = {
   get_login_page: renderLogin,
   get_user: getUser,
+  get_friends: getFriends,
   check_login: checkLogin,
   get_signup_page: renderSignup,
   signup_user: signupUser,
@@ -864,9 +1258,11 @@ const routes = {
   sign_out: signout,
   chat : chat,
   make_post: makePost,
+  make_post_wall: makePostWall,
   make_comment: makeComment,
   get_comments: getComments,
   get_posts: getPosts,
+  get_posts_wall: getPostsWall,
   get_posts_by_author: getPostsByAuthor,
   render_wall: renderWall,
   io_on : io_on,
@@ -876,7 +1272,11 @@ const routes = {
   get_search: getSearch,
   search_scan: searchScan,
   add_friend: addFriend,
-  remove_friend: removeFriend
+  remove_friend: removeFriend,
+  get_last_action: getLastAction,
+  get_visualizer: getVisualizer,
+  init_visualization: initVisualization,
+  update_visualization: updateVisualization,
 };
 
 module.exports = routes;

@@ -27,6 +27,7 @@ const loginLookup = function(username, callback) {
 }
 
 const addUser = function(username, password, firstname, lastname, email, affiliation, birthday, interests, callback) {
+  const time = new Date().getTime();
   const params = {
     TableName: "users",
     Item: {
@@ -53,6 +54,9 @@ const addUser = function(username, password, firstname, lastname, email, affilia
       },
       "interests": {
         "SS": interests
+      },
+      "lastAction": {
+        "N": time.toString()
       }
       /*,
       "chats": {
@@ -87,6 +91,39 @@ const addUser = function(username, password, firstname, lastname, email, affilia
       });
     }
   });
+}
+
+const logLastAction = function(username, callback) {
+  const time = new Date().getTime();
+  const params = {
+    TableName: "users",
+    Key: {
+      "username": {
+        "S": username
+      }
+    },
+    UpdateExpression: "SET lastAction = :x",
+    ExpressionAttributeValues: {
+      ":x": {
+        "N": time.toString()
+      }
+    }
+  }
+  db.updateItem(params, callback);
+}
+
+const getLastAction = function(username, callback) {
+  const params = {
+    TableName: "users",
+    KeyConditionExpression: "username = :x",
+    ExpressionAttributeValues: {
+      ":x": {
+        "S": username
+      }
+    },
+    ProjectionExpression: "lastAction"
+  };
+  db.query(params, callback);
 }
 
 const changeAffiliation = function(username, newAffiliation, callback) {
@@ -219,6 +256,9 @@ const makePost = function(author, content, callback) {
       },
       "likes": {
         "N": "0"
+      },
+      "isWall": {
+        "S": author
       }
     }
   };
@@ -778,6 +818,8 @@ const addInvite = function(username, recepient, callback) {
 const database = {
   login_lookup: loginLookup,
   add_user: addUser,
+  log_last_action: logLastAction,
+  get_last_action: getLastAction,
   update_affiliation: changeAffiliation,
   update_email: changeEmail,
   update_password: changePassword,
