@@ -87,6 +87,7 @@
       .dot-green {
         height: 5px;
         width: 5px;
+        margin-bottom: 2px;
         background-color: #0f0;
         border-radius: 50%;
         display: inline-block;
@@ -95,6 +96,7 @@
       .dot-red {
         height: 5px;
         width: 5px;
+        margin-bottom: 2px;
         background-color: rgb(255, 0, 0);
         border-radius: 50%;
         display: inline-block;
@@ -127,7 +129,8 @@
         text-decoration: none;
         color: black;
         padding: 20px 20px;
-        
+        margin-bottom: 10px;
+        margin-top: 10px;
       }
 
       li a.active {
@@ -148,49 +151,6 @@
 
 
   <body>
-    <!--
-    <div>
-      <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <span class="navbar-brand" href="#" style="padding-left: 10px">PennBook</span>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-          <ul class="navbar-nav mr-auto">
-            <li class="nav-item disabled">
-              <a class="nav-link" href="/feed">Feed</a>
-            </li>
-            <li class="nav-item">
-              <a id="wall-nav-bar" class="nav-link" href="/wall">Wall</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="/chat">Chat</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="/visualizer">Visualizer</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="/settings">Settings</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="/search">Search</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="/newsfeed">News</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="/searchnews">Search News</a>
-          </li>
-          </ul>
-          <ul class="navbar-nav my-2 my-lg-0">
-            <li class="nav-item active">
-              <a class="nav-link" href="/signout">Sign Out</a>
-            </li>
-          </ul>
-        </div>
-      </nav>
-    </div>
-    -->
     <ul>
       <li class="nav-item disabled">
         <a class="nav-link" style="color:black" href="/feed">
@@ -357,7 +317,7 @@
               // "href", "/wall?username=<%= username %>"
               // <li href="/wall?username=" + username + "\""
               // $("#friends-list").append("<li>" + friend + " <span class=\"dot-green\"></span></li>");
-              $("#friends-list").append("<li> <a href=\"/wall?username=" + friend + "\">" + friend + "<span class=\"dot-green\"></span>" + "</a>" + "</li>");
+              $("#friends-list").append("<li> <a href=\"/wall?username=" + friend + "\">" + friend + " <span class=\"dot-green\"></span>" + "</a>" + "</li>");
             } else {
               $("#friends-list").append("<li> <a href=\"/wall?username=" + friend + "\">" + friend + " <span class=\"dot-red\"></span>" + "</a>" + "</li>");
               // $("#friends-list").append("<li>" + friend + " <span class=\"dot-red\"></span> </li>");
