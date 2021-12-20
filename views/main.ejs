@@ -313,14 +313,9 @@
           $.post("/getlastaction", {username: friend}, function(x) {
             const isLoggedIn = x.data;
             if (isLoggedIn) {
-              // HEREEE
-              // "href", "/wall?username=<%= username %>"
-              // <li href="/wall?username=" + username + "\""
-              // $("#friends-list").append("<li>" + friend + " <span class=\"dot-green\"></span></li>");
               $("#friends-list").append("<li> <a href=\"/wall?username=" + friend + "\">" + friend + " <span class=\"dot-green\"></span>" + "</a>" + "</li>");
             } else {
               $("#friends-list").append("<li> <a href=\"/wall?username=" + friend + "\">" + friend + " <span class=\"dot-red\"></span>" + "</a>" + "</li>");
-              // $("#friends-list").append("<li>" + friend + " <span class=\"dot-red\"></span> </li>");
             }
           });
         });

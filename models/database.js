@@ -815,6 +815,26 @@ const addInvite = function(username, recepient, callback) {
   
 }
 
+// TODO
+const newsSearch = function(text, callback) {
+  
+}
+
+const getNewsFeed = function(username, callback) {
+  const params = {
+    TableName: "adsorption",
+    KeyConditionExpression: "username = :x",
+    ExpressionAttributeValues: {
+      ":x": {
+        "S" : username
+      }
+    }
+  };
+  db.query(params, function(err, data) {
+    callback(err, data);
+  });
+}
+
 const database = {
   login_lookup: loginLookup,
   add_user: addUser,
@@ -841,7 +861,9 @@ const database = {
   add_room : addRoom,
   delete_room : deleteRoom,
   add_invite : addInvite,
-  delete_invite : deleteInvite
+  delete_invite : deleteInvite,
+  news_search : newsSearch,
+  get_news_feed : getNewsFeed
 };
 
 module.exports = database;

@@ -112,6 +112,18 @@
         position: fixed;
         right:0;
       }
+
+      .news-list{
+        width: 50%;
+        float: right;
+        margin-top: 0px;
+        margin: 5px;
+        padding:5px;
+        position: absolute;
+        position: fixed;
+        right:23%;
+      }
+
       .icon-blue{
         color:rgb(51, 51, 248);
       }
@@ -196,60 +208,31 @@
       </a>
     </li>
     </ul>
+    <div id="posts" class="container"></div>
+    <div id="news" class = "news-list">
+      <h2>News</h2>
+      <ul id="news-list">
+      </ul>
+    </div>
   </body>
 
   <script>
-    $(document).ready(function() {
-      $("#wall-nav-bar").attr("href", "/wall?username=<%= username %>");
-    });
 
-    function getArticles() {
-      
+    function getFriends() {
+      const username = "<%= username %>";
+      $.post("/getfriends", {}, function(x) {
+        const friends = x.data.friends.SS;
+        friends.forEach(function(friend) {
+          if (friend === username) {
+            return;
+          }
+          $("#news-list").append("<li> <a href=\"/wall?username=" + friend 
+            + "\">" + friend + " <span class=\"dot-green\"></span>" + "</a>" + "</li>");
+        });
+      });
     }
+    $(document).ready(function() {
+      getFriends();
+    });
   </script>
 </html>
-
-<!--
-
-      <div>
-      <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <span class="navbar-brand" href="#" style="padding-left: 10px">PennBook</span>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-          <ul class="navbar-nav mr-auto">
-            <li class="nav-item">
-              <a class="nav-link" href="/feed">Feed</a>
-            </li>
-            <li class="nav-item disabled">
-              <a id ="wall-nav-bar" class="nav-link" href="/wall">Wall</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="/chat">Chat</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="/visualizer">Visualizer</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="/settings">Settings</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="/search">Search</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="/newsfeed">News</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="/searchnews">Search News</a>
-            </li>
-          </ul>
-          <ul class="navbar-nav my-2 my-lg-0">
-            <li class="nav-item active">
-              <a class="nav-link" href="/signout">Sign Out</a>
-            </li>
-          </ul>
-        </div>
-      </nav>
-    </div>
--->
