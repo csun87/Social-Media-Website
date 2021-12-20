@@ -4,61 +4,204 @@
     <title></title>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@200&display=swap" rel="stylesheet"> 
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <style>
+      navbar{
+        background: #4267B2;
+      }
+      .form-control {
+        border-radius: 10px;
+        margin-bottom: 5px;
+      }
+      .form-control:hover{
+        background-color: #f0f0f0;
+      }
+      .form-control:focus{
+        background-color: #f0f0f0;
+      }
+      .card{
+        border-radius: 10px;
+        width: 500px;
+        font-family: 'Helvetica';
+        border: 1px solid #DCDCDC;
+        margin: auto;
+        margin-top: 10px;
+        margin-bottom: 10px;
+        padding: 10px;
+        box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.3);
+      }
+      .card-title{
+        font-family: Helvetica, sans-serif;
+      }
+      .card-text{
+        font-family: Helvetica, sans-serif;
+      }
+      .comment-card{
+        background: #f7f7f7;
+        width: 350px;
+        font-size: 12px;
+        border-radius: 5px;
+        margin-top: 2px;
+        margin-bottom: 2px;
+        margin-left: 20px;
+        box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.3);
+        border: 1px solid #DCDCDC;
+        padding: 10px;
+      }
+      .card-subtitle{
+        font-weight: bold;
+        font-family: Helvetica, sans-serif;
+        font-size: 12px;
+        padding: 0px;
+      }
+      .form-group{
+        margin-left: 10px;
+      }
+  
+      .btn {
+        width: 100px;
+        padding: auto;
+        font-family: Helvetica, sans-serif;
+        color: white;
+        border-radius: 3px;
+        box-shadow: none;
+        border-radius:3px;
+        border: none;
+        position: relative;
+        transition: all .25s ease-in-out;
+      }
+      .sendcomment-button:hover{
+        background-color: #0066ff;
+      }
+
+      .dot-green {
+        height: 5px;
+        width: 5px;
+        background-color: #0f0;
+        border-radius: 50%;
+        display: inline-block;
+      }
+
+      .dot-red {
+        height: 5px;
+        width: 5px;
+        background-color: rgb(255, 0, 0);
+        border-radius: 50%;
+        display: inline-block;
+      }
+
+      .friends-list{
+        width: 20%;
+        float: right;
+        margin-top: 0px;
+        margin: 20px;
+        padding:5px;
+        position: absolute;
+        position: fixed;
+        right:0;
+      }
+      .icon-blue{
+        color:rgb(51, 51, 248);
+      }
+      ul {
+        width: 25%;
+        padding:0;
+        background-color: #f5f4f4;
+        color: black;
+        position: fixed;
+        height: 100%;
+        list-style-type: none;
+      }
+      li a {
+        display: block;
+        text-decoration: none;
+        color: black;
+        padding: 20px 20px;
+        
+      }
+
+      li a.active {
+        background-color: #6c80db;
+      }
+
+      li a:hover:not(.active) {
+        background-color: rgb(214, 214, 214);
+      }
+      body{
+        background: #f8f8f8;
+      }
+      html {
+          height: 100%;
+      }
+    </style>
   </head>
   <body>
     <div>
-      <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <span class="navbar-brand" href="#" style="padding-left: 10px">PennBook</span>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-          <ul class="navbar-nav mr-auto">
-            <li class="nav-item">
-              <a class="nav-link" href="/feed">Feed</a>
-            </li>
-            <li class="nav-item disabled">
-              <a id ="wall-nav-bar" class="nav-link" href="/wall">Wall</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="/chat">Chat</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="/visualizer">Visualizer</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="/settings">Settings</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="/search">Search</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="/newsfeed">News</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="/searchnews">Search News</a>
-          </li>
-          </ul>
-          <ul class="navbar-nav my-2 my-lg-0">
-            <li class="nav-item active">
-              <a class="nav-link" href="/signout">Sign Out</a>
-            </li>
-          </ul>
-        </div>
-      </nav>
+      <ul>
+        <li class="nav-item disabled">
+          <a class="nav-link" style="color:black" href="/feed">
+            <i class="glyphicon glyphicon-globe icon-blue"></i><span>  Feed</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a id="wall-nav-bar" style="color:black" class="nav-link" href="/wall">
+            <i class="glyphicon glyphicon-user icon-blue"></i><span>  Wall</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          
+          <a class="nav-link" style="color:black" href="/chat">
+            <i class="glyphicon glyphicon-comment icon-blue"></i><span>  Chat</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" style="color:black" href="/visualizer">
+            <i class="glyphicon glyphicon-stats icon-blue"></i><span>  Visualizer</span></a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" style="color:black" href="/settings">
+            <i class="glyphicon glyphicon-cog icon-blue"></i><span>  Settings</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" style="color:black" href="/search">
+            <i class="glyphicon glyphicon-search icon-blue"></i><span>  Search</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" style="color:black" href="/newsfeed">
+            <i class="glyphicon glyphicon-list icon-blue"></i><span>  News</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" style="color:black" href="/searchnews">
+            <i class="glyphicon glyphicon-search icon-blue"></i><span>  Search News</span>
+          </a>
+      </li>
+      <li class="nav-item active">
+        <a class="nav-link" style="color:black" href="/signout">
+          <i class="glyphicon glyphicon-off icon-blue"></i><span>  Sign Out</span>
+        </a>
+      </li>
+      </ul>
     </div>
-    <div id="user-info"></div>
-    <div id="remove-friend-button-container">
-      <button id="remove-friend-button" class="btn btn-primary">Remove Friend</button>
+    <!-- <div id="user-info"></div> -->
+    
+  <div id="post-box" style="width: 468px; border-radius: 5px; height: 80%; align-self: center; margin: 0 auto;">
+    <form id="make-post-form">
+      <div id="user-info"></div>
+      <div id="remove-friend-button-container">
+        <button id="remove-friend-button" class="btn btn-primary" style="margin-bottom: 15px;">Unfriend</button>
+    </div>
+      <div class="form-group">
+        <input id="make-post-text" type="text" class="form-control" id="make-post-text" placeholder="Write a post here">
+      </div>
+      <input id="make-post-button" type="submit" class="btn btn-primary" value="Make Post">
+    </form>
   </div>
-    <div id="post-box" style="width: 80%; height: 80%; align-self: center;">
-      <form id="make-post-form">
-        <div class="form-group">
-          <input id="make-post-text" type="text" class="form-control" id="make-post-text" placeholder="Write a post here">
-        </div>
-        <input id="make-post-button" type="submit" class="btn btn-primary" value="Make Post">
-      </form>
-    </div>
     <div id="posts" class="container"></div>
   </body>
   <script>
@@ -72,22 +215,23 @@
         var str = "";
         posts.forEach(function(post) {
           const date = new Date(post.timestamp);
-          var text = '<div class="card" style="width: 18rem;"><div class="card-body"><h5 class="card-title">' + post.author + 
+          var text = '<div class="card" ><div class="card-body"><h5 class="card-title">' + post.author + 
             '</h5><h6 class="card-subtitle mb-2 text-muted">' + date.toString() + 
             '</h6><p class="card-text">' + post.content + 
             '</p></div>';
           post.comments.forEach(function(comment) {
             const commentDate = new Date(parseInt(comment.timestamp));
-            text = text + '<h5 class="card-subtitle">' + comment.author + '</h5>';
-            text = text + '<h6 class="card-subtitle mb-2 text-muted">' + commentDate.toString() + '</h6>';
-            text = text + '<p class="card-text">' + comment.content + '</p>';
+            var cDateString = commentDate.toString().substring(4, 21);
+            text = text + '<div class = "comment-card"><h5 class="card-subtitle">' + comment.author + '</h5>';
+            text = text + '<h6 class="card-subtitle mb-2 text-muted">' + cDateString + '</h6>';
+            text = text + '<p class="card-text">' + comment.content + '</p></div>';
           });
           const commentFormId = 'make-comment-form-' + post.author + "$" + post.timestamp;
           text = text + '<form id="' + commentFormId + '">'  
             + '<div class="form-group">'
             + '<input id="' + post.author + "$" + post.timestamp + '-make-comment-text" type="text" class="form-control" placeholder="Enter comment">'
             + '</div>'
-            + '<input id="make-comment-button" type="submit" class="btn btn-primary" value="Post comment">'
+            + '<input id="make-comment-button" type="submit" class="btn btn-primary" value="Post">'
             + '</form>'
             + '</div></div>';
           str += text;

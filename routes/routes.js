@@ -1278,6 +1278,7 @@ const routes = {
   get_visualizer: getVisualizer,
   init_visualization: initVisualization,
   update_visualization: updateVisualization,
+  get_news: getNewsFeed,
 };
 
 module.exports = routes;
