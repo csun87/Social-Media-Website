@@ -57,13 +57,13 @@ const addUser = function(username, password, firstname, lastname, email, affilia
       },
       "lastAction": {
         "N": time.toString()
-      }
-      /*,
-      "chats": {
-        "L": [ 
-          {"N": "1"} , {"N": "2"}, {"N": "7"}
-        ]
-      }*/
+      },
+      "chatInvites": {
+        "L": []
+      },
+      "rooms": {
+        "L": []
+      },
     },
     ReturnValues: "NONE"
   }
@@ -655,26 +655,61 @@ const deleteRoom = function(username, room, callback) {
             console.log(x.S)
 
             index = rooms.indexOf(x)
+            console.log(index)
 
-            const params = {
-              TableName: "users",
-              Key: {
-                "username": {
-                  "S": username
+            var params
+
+            if (index == 0) {
+              rooms.shift()
+              params = {
+                TableName: "users",
+                Key: {
+                  "username": {
+                    "S": username
+                  }
+                },
+                UpdateExpression: "set rooms = :x",
+                ExpressionAttributeValues: {
+                  ":x": {
+                    "L": rooms
+                  }
                 }
-              },
-              UpdateExpression: "set rooms = :x",
-              ExpressionAttributeValues: {
-                ":x": {
-                  "L": rooms.splice(index, 1)
+              };
+
+              db.updateItem(params, function(err, data) {
+                console.log(err)
+                console.log(data)
+                callback(err, data);
+              });
+
+            } else if (index > 0) {
+              console.log(rooms.splice(index, 1))
+              console.log(rooms)
+              params = {
+                TableName: "users",
+                Key: {
+                  "username": {
+                    "S": username
+                  }
+                },
+                UpdateExpression: "set rooms = :x",
+                ExpressionAttributeValues: {
+                  ":x": {
+                    "L": rooms
+                  }
                 }
-              }
-            };
-            db.updateItem(params, function(err, data) {
-              console.log(err)
-              console.log(data)
-              callback(err, data);
-            });
+              };
+
+              db.updateItem(params, function(err, data) {
+                console.log(err)
+                console.log(data)
+                callback(err, data);
+              });
+
+            }
+
+            
+            
           }
         })
         //console.log(newInviteList)
@@ -720,25 +755,54 @@ const deleteInvite = function(username, sender, callback) {
         var index = -1;
         invites.forEach(x=>{
           if (x.S == sender) {
-            console.log("AAA")
-            index = invites.indexOf(x)
-            console.log(index)
-            console.log(invites.splice(index, 1))
 
-            const params = {
-              TableName: "users",
-              Key: {
-                "username": {
-                  "S": username
+            var params
+
+            if (index == 0) {
+              invites.shift()
+              params = {
+                TableName: "users",
+                Key: {
+                  "username": {
+                    "S": username
+                  }
+                },
+                UpdateExpression: "set chatInvites = :x",
+                ExpressionAttributeValues: {
+                  ":x": {
+                    "L": invites
+                  }
                 }
-              },
-              UpdateExpression: "set chatInvites = :x",
-              ExpressionAttributeValues: {
-                ":x": {
-                  "L": invites.splice(index, 1)
+              };
+              db.updateItem(params, function(err, data) {
+                console.log(err)
+                console.log(data)
+                callback(err, data);
+              });
+
+            } else {
+              invites.splice(index, 1)
+              params = {
+                TableName: "users",
+                Key: {
+                  "username": {
+                    "S": username
+                  }
+                },
+                UpdateExpression: "set chatInvites = :x",
+                ExpressionAttributeValues: {
+                  ":x": {
+                    "L": invites
+                  }
                 }
-              }
-            };
+              };
+              db.updateItem(params, function(err, data) {
+                console.log(err)
+                console.log(data)
+                callback(err, data);
+              });
+
+            }
             db.updateItem(params, function(err, data) {
               console.log(err)
               console.log(data)

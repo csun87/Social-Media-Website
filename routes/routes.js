@@ -685,10 +685,11 @@ const getComments = function(req, res) {
 }
 
 
+//check if works when initializing
+//migrate to new aws account
 
-//refresh when leaving page
-//deleting the only room
-//initializing no rooms
+
+//leaving the last room special case render
 
 
 
@@ -715,133 +716,160 @@ const io_on = function(socket) {
   console.log(socket.handshake.session);
 
   socket.emit('init', socket.handshake.session.username)
-  console.log("init")
 
   var r;
   var invs;
   //get rooms
-  db.login_lookup(socket.handshake.session.username, function(err, data) {
-    console.log(data.Items[0].rooms.L);
-    r = data.Items[0].rooms.L
-    invs = data.Items[0].chatInvites.L;
 
-    //Getting all messages on page load
-    if(r[0] != null) {
-      db.get_Messages(r[0].s, function(err,data) {
-        if(err) {
-          console.log(err)
-        } else {
-          //console.log(data);
-          var send = []
-    
-          var moreData = {
-            user : socket.handshake.session.username,
-            rooms : r,
-            invites: invs,
-            currentRoom : r[0].S
-          }
-          send.push(data);
-          send.push(moreData)
-          //console.log(send)
-          socket.emit('prev_messages', send);
-    
-          socket.emit('chat')
-        }
-    
-        })
-
-    } else if (invs[0] != null) {
-
-      console.log(invs[0])
-      var send = []
   
-      var moreData = {
-        user : socket.handshake.session.username,
-        rooms : r,
-        invites: invs,
-        currentRoom : null
-      }
-      send.push(null);
-      send.push(moreData)
-      //console.log(send)
-      socket.emit('prev_messages', send);
+  db.login_lookup(socket.handshake.session.username, function(err, data) {
+      console.log(data.Items[0].rooms.L);
+      r = data.Items[0].rooms.L
+      invs = data.Items[0].chatInvites.L;
 
-      socket.emit('chat')
+      //Getting all messages on page load
+      if(r[0] != null) {
+        console.log("Inititializing with messages")
+        console.log("first room is:" + r[0].S)
+        
+        db.get_Messages(r[0].S, function(err,data2) {
+          if(err) {
+            console.log(err)
+          } else {
+            //console.log(data);
+            var send = []
 
-    }
+            //console.log(data2)
+      
+            var moreData = {
+              user : socket.handshake.session.username,
+              rooms : r,
+              invites: invs,
+              currentRoom : r[0].S
+            }
+            send.push(data2);
+            send.push(moreData)
+            //console.log(send)
+            socket.emit('prev_messages', send);
+      
+            socket.emit('chat')
+          }
+      
+          })
+
+      } else if (invs[0] != null) {
+
+        //console.log("Inititializing without messages")
+
+        //console.log(invs[0])
+        var send = []
     
+        var moreData = {
+          user : socket.handshake.session.username,
+          rooms : r,
+          invites: invs,
+          currentRoom : null
+        }
+        send.push(null);
+        send.push(moreData)
+        //console.log(send)
+        socket.emit('prev_messages', send);
+
+        socket.emit('chat')
+
+      }
 
   })
+
+  
+  
   
 
   //Receiving new message
   socket.on("test", arg => {
-    console.log(socket.handshake.session.username);
     db.addMessage(socket.handshake.session.username, arg.room, arg.message, function(err,data) {
       if(err) {
           console.log(err)
       } else {
-          //console.log(data);
+          
       }
     });
-    console.log("message received");
     socket.emit('chat message', arg);
 
   });
 
   //Refreshing the page
   socket.on("refresh", arg => {
-    console.log("Refreshing");
 
-    db.get_Messages(arg, function(err,data) {
-      if(err) {
-         console.log(err)
-      } else {
-         //console.log(data);
-         var send = []
-   
-         var username = {
-           user : socket.handshake.session.username
-         }
-         send.push(data);
-         send.push(username)
-         //console.log(send)
-         socket.emit('refr', send);
-      }
-
+    db.login_lookup(socket.handshake.session.username, function(err, dat) {
+      r = dat.Items[0].rooms.L
+      invs = dat.Items[0].chatInvites.L;
+  
+      //Getting all messages on page load
+      if(r[0] != null) {
+        db.get_Messages(arg, function(err,data) {
+          if(err) {
+            console.log(err)
+          } else {
+            var send = []
       
-   
-      });
+            var moreData = {
+              user : socket.handshake.session.username,
+              rooms : r,
+              invites: invs,
+              currentRoom : arg
+            }
+            send.push(data);
+            send.push(moreData)
+            socket.emit('refr', send);
+          }
+      
+          })
+  
+      } else if (invs[0] != null) {
+  
+        var send = []
+    
+        var moreData = {
+          user : socket.handshake.session.username,
+          rooms : r,
+          invites: invs,
+          currentRoom : arg
+        }
+        send.push(null);
+        send.push(moreData)
+        //console.log(send)
+        socket.emit('refr', send);
+  
+        socket.emit('chat')
+  
+      }
+      
+  
+    })
+
   });
 
   socket.on("change room", arg => {
-
     var r;
     var invs;
     db.login_lookup(socket.handshake.session.username, function(err, data) {
-      console.log(data);
       r = data.Items[0].rooms.L
       invs = data.Items[0].chatInvites.L;
-
       db.get_Messages(arg, function(err,data) {
         if(err) {
-           console.log(err)
         } else {
-           console.log(data);
-           var send = []
 
-           console.log(arg)
-     
+           var send = []
            var moreData = {
              user : socket.handshake.session.username,
              rooms : r,
              invites : invs,
-             currentRoom : arg
+             currentRoom : arg,
            }
            send.push(data);
            send.push(moreData)
-           //console.log(send)
-           socket.emit('prev_messages', send);
+           socket.emit('chang', send);
   
           }
         })
@@ -851,11 +879,18 @@ const io_on = function(socket) {
 
   socket.on("sendGroupInvite", arg => {
     db.check_friends(socket.handshake.session.username, function(err, da) {
-      var t = da.Items[0].friends.SS;
-      console.log(da.Items[0].friends.SS);
-      console.log(arg.message)
 
-      var u = t.includes(arg.message);
+      var o = arg.message.split(",")
+      o.push(socket.handshake.session.username)
+      o.sort();
+      //var p = o.join();
+
+      var t = da.Items[0].friends.SS;
+
+      //check if 
+      console.log(t);
+      console.log(o)
+      var u = o.every(x => t.includes(x));
 
       if (u) {
         //check if the invite exists for the other person
@@ -863,25 +898,17 @@ const io_on = function(socket) {
           var invExists = false;
           if (d.Items[0].chatInvites != null) {
             invList = d.Items[0].chatInvites.L
-            console.log(invList)
-            console.log("yes")
             //check if our user is in their invitelist
             invList.forEach(x=>{
-              console.log(x.S)
-              console.log(arg.message)
               if(x.S == socket.handshake.session.username) {
                 invExists = true;
-                console.log(invExists)
               }
             })
           }   
 
-          console.log(invExists)
           if(!invExists) {
-            console.log("yesyes")
             //add invite for the recepient
             db.add_invite(arg.room, arg.message, function(err,dat){
-              //console.log(dat.Items[0].chatInvites)
             })
           }
         })
@@ -895,9 +922,6 @@ const io_on = function(socket) {
   socket.on("sendInvite", arg => {
     db.check_friends(socket.handshake.session.username, function(err, da) {
       var t = da.Items[0].friends.SS;
-      console.log(da.Items[0].friends.SS);
-      console.log(arg.message)
-
       var u = t.includes(arg.message);
 
       if (u) {
@@ -906,26 +930,39 @@ const io_on = function(socket) {
           var invExists = false;
           if (d.Items[0].chatInvites != null) {
             invList = d.Items[0].chatInvites.L
-            console.log(invList)
-            console.log("yes")
             //check if our user is in their invitelist
             invList.forEach(x=>{
-              console.log(x.S)
-              console.log(arg.message)
               if(x.S == socket.handshake.session.username) {
                 invExists = true;
-                console.log(invExists)
               }
             })
           }   
 
-          console.log(invExists)
           if(!invExists) {
-            console.log("yesyes")
-            //add invite for the recepient
-            db.add_invite(socket.handshake.session.username, arg.message, function(err,dat){
-              //console.log(dat.Items[0].chatInvites)
-            })
+            //check if the room exists
+            var roomList;
+            var roomExists = false;
+            if (d.Items[0].rooms != null) {
+              roomList = d.Items[0].rooms.L
+
+              var o = arg.message.split(",")
+              o.push(socket.handshake.session.username)
+              o.sort();
+              var p = o.join();
+              
+
+              roomList.forEach(z => {
+                if(z.S == p) {
+                  console.log("roomExists")
+                  roomExists = true;
+                }
+              })
+            }
+            if (!roomExists) {
+              db.add_invite(socket.handshake.session.username, arg.message, function(err,dat){
+              })
+            }
+            
           }
         })
 
@@ -935,33 +972,76 @@ const io_on = function(socket) {
   })
 
   socket.on("deleteRoom", arg => {
-
-    console.log(arg.message)
-
-    console.log("delroom received")
     db.delete_room(socket.handshake.session.username, arg.message, function(err, data){
+
+      if (data) {
+        db.login_lookup(socket.handshake.session.username, function(err, data) {
+          r = data.Items[0].rooms.L
+          invs = data.Items[0].chatInvites.L;
+      
+          //Getting all messages on page load
+          console.log(typeof(r[0]))
+          if(r.length > 0) {
+            console.log("aha")
+            db.get_Messages(r[0].s, function(err,data) {
+              if(err) {
+              } else {
+                var send = []
+          
+                var moreData = {
+                  user : socket.handshake.session.username,
+                  rooms : r,
+                  invites: invs,
+                  currentRoom : r[0].S
+                }
+                send.push(data);
+                send.push(moreData)
+
+                socket.emit('prev_messages', send);
+          
+                socket.emit('chat')
+              }
+          
+              })
+      
+          } else if (invs[0] != null) {
+
+            var send = []
+        
+            var moreData = {
+              user : socket.handshake.session.username,
+              rooms : r,
+              invites: invs,
+              currentRoom : null
+            }
+            send.push(null);
+            send.push(moreData)
+            socket.emit('prev_messages', send);
+      
+            socket.emit('chat')
+      
+          }
+    
+        })
+
+      }
+      
+      
       
     })
-
   })
 
   socket.on("addRoom", arg => {
 
-    console.log(arg);
     var o = arg.message.split(",")
     o.push(socket.handshake.session.username)
     o.sort();
     var p = o.join();
 
-
-    console.log(p);
-
-    console.log("Adding room " + arg)
     db.check_friends(socket.handshake.session.username, function(err, da) {
 
       var t = da.Items[0].friends.SS;
-      console.log(da.Items[0].friends.SS);
-      console.log(o)
+
 
       //check if all friends exist
       var u = o.every(x => t.includes(x));
@@ -979,42 +1059,97 @@ const io_on = function(socket) {
             //add for current user
             db.add_room(socket.handshake.session.username, p, function(err,dat){
               //add this for every other person
+              var oRoomExists = false;
               o.forEach(x=>{
                 if (x != socket.handshake.session.username) {
-                  db.add_room(x, p, function(err,dat){
-                    if (err) {
-                      console.log(err);
-                    }
+                  db.login_lookup(x, function(err, dh) {
+                    var oRoomList = dh.Items[0].rooms.L
+                    oRoomList.forEach(y=>{
+                      if(y.S == p) {
+                        oRoomExists = true;
+                      }
+                    })
                   })
+                  if (!oRoomExists) {
+                    db.add_room(x, p, function(err,dat){
+                      if (err) {
+                        console.log(err);
+                      }
+                    })
+                  }
                 }
               })
-              console.log(dat)
-              db.login_lookup(socket.handshake.session.username, function(err, data) {
-                console.log(data);
-                var r = data.Items[0].rooms.L
-                var invs = data.Items[0].rooms.L
-        
-                db.get_Messages(p, function(err,data) {
-                  if(err) {
-                    console.log(err)
-                  } else {
-                    console.log(data);
-                    var send = []
-              
-                    var moreData = {
-                      user : socket.handshake.session.username,
-                      rooms : r,
-                      invites : invs,
-                      currentRoom : arg.room
-                    }
-                    send.push(data);
-                    send.push(moreData)
-                    //console.log(send)
-                    socket.emit('prev_messages', send);
+              db.delete_invite(socket.handshake.session.username, arg.message, function(err, d){
+                if(d) {
+                  db.login_lookup(socket.handshake.session.username, function(err, dat) {
+                    var r = dat.Items[0].rooms.L
+                    var invs = dat.Items[0].chatInvites.L
             
-                    }
+                    db.get_Messages(p, function(err,data) {
+                      if(err) {
+                        console.log(err)
+                      } else {
+                        var send = []
+                  
+                        var moreData = {
+                          user : socket.handshake.session.username,
+                          rooms : r,
+                          invites : invs,
+                          currentRoom : arg.room
+                        }
+
+                        //data.sort((x, y) => y.timestamp - x.timestamp);
+
+                        send.push(data);
+                        send.push(moreData)
+                        socket.emit('prev_messages', send);
+                        
+                
+                        }
+                      })
                   })
+
+                }
+                
+
               })
+              
+            })
+
+          } else {
+            db.delete_invite(socket.handshake.session.username, arg.message, function(err, d){
+              if(d) {
+                db.login_lookup(socket.handshake.session.username, function(err, dat) {
+                  var r = dat.Items[0].rooms.L
+                  var invs = dat.Items[0].chatInvites.L
+          
+                  db.get_Messages(p, function(err,data) {
+                    if(err) {
+                      console.log(err)
+                    } else {
+                      var send = []
+                
+                      var moreData = {
+                        user : socket.handshake.session.username,
+                        rooms : r,
+                        invites : invs,
+                        currentRoom : arg.room
+                      }
+
+                      //data.sort((x, y) => y.timestamp - x.timestamp);
+
+                      send.push(data);
+                      send.push(moreData)
+                      socket.emit('prev_messages', send);
+                      
+              
+                      }
+                    })
+                })
+
+              }
+              
+
             })
 
           }
@@ -1030,6 +1165,59 @@ const io_on = function(socket) {
   socket.on("deleteInvite", arg => {
     
     db.delete_invite(socket.handshake.session.username, arg.message, function(err, data){
+      if (data) {
+        db.login_lookup(socket.handshake.session.username, function(err, data) {
+          console.log(data.Items[0].rooms.L);
+          r = data.Items[0].rooms.L
+          invs = data.Items[0].chatInvites.L;
+      
+          //Getting all messages on page load
+          if(r[0] != null) {
+            db.get_Messages(r[0].s, function(err,data) {
+              if(err) {
+                console.log(err)
+              } else {
+                //console.log(data);
+                var send = []
+          
+                var moreData = {
+                  user : socket.handshake.session.username,
+                  rooms : r,
+                  invites: invs,
+                  currentRoom : r[0].S
+                }
+                send.push(data);
+                send.push(moreData)
+                //console.log(send)
+                socket.emit('prev_messages', send);
+          
+                socket.emit('chat')
+              }
+          
+              })
+      
+          } else if (invs[0] != null) {
+      
+            console.log(invs[0])
+            var send = []
+        
+            var moreData = {
+              user : socket.handshake.session.username,
+              rooms : r,
+              invites: invs,
+              currentRoom : null
+            }
+            send.push(null);
+            send.push(moreData)
+            //console.log(send)
+            socket.emit('prev_messages', send);
+      
+            socket.emit('chat')
+      
+          }
+    
+        })
+      }
       
     })
 

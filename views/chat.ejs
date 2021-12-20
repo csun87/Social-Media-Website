@@ -144,22 +144,21 @@
   var roomList = []
   var inviteList = []
   var currentRoom
+  var person;
 
   socket.on('init', function(msg){
-    console.log(msg)
     var item = document.createElement('li');
     item.innerHTML = msg
     user.appendChild(item);
+    person = msg
   })
 
   socket.on('chat message', function(msg) {
-    console.log(msg)
     var item = document.createElement('li');
-    item.textContent = msg.message;
+    item.textContent = "(" + msg.sender + ") :" + msg.message;
     item.className = "r";
     messages.appendChild(item);
     messageList.push(item)
-    console.log(messageList)
     window.scrollTo(0, document.body.scrollHeight);
   });
 
@@ -168,16 +167,18 @@
     rooms.innerHTML = "";
     messageList = [];
     roomList = [];
-    console.log("Prev")
-    console.log(msg)
+
 
     if (msg[0] != null) {
+
+      msg[0].Items.sort((x, y) => y.timestamp - x.timestamp);
+
       msg[0].Items.forEach(x => {
       var item = document.createElement('li');
       if(x.author.S == msg[1].user) {
         item.className = "r";
       }
-      item.textContent = x.message.S;
+      item.textContent = "(" + x.author.S + ") :" + x.message.S;
       messages.appendChild(item);
       messageList.push(item)
       window.scrollTo(0, document.body.scrollHeight);
@@ -188,7 +189,6 @@
     msg[1].rooms.forEach( x => {
       var item = document.createElement('li');
       item.innerHTML += '<form id="'+ x.S +'_R" action="" class="flex"><input id="roomBtn" type="button" class="flex btn btn-outline-primary" value='+ x.S + ' onclick= changeRoom("' +x.S+ '") /> <input id = "'+x.S+'_RV" class = "form-control" placeholder="Type Leave to leave."></form>'
-      console.log(item.innerHTML)
       rooms.appendChild(item);
       roomList.push(x.S);
 
@@ -200,38 +200,27 @@
         
         if(roomIdVal.value) {
             if (roomIdVal.value == "Leave") {
-            console.log(x.S)
-            //console.log(invIdValue.value)
-
-            var send = {
+              var send = {
               message : x.S,
               room : currentRoom
             }
-            //socket.emit("sendInvite", send);
-            //socket.emit('deleteRoom', send);
 
-            console.log(roomList)
             var index = roomList.indexOf(x.S);
-            console.log(index)
             if (index == 0) {
               roomList.shift()
             } else {
-              console.log("not pop")
               roomList = roomList.splice(index-1,1);
             }
             
-            console.log(roomList)
-            roomId.parentNode.removeChild(roomId); 
+            //roomId.parentNode.removeChild(roomId); 
             var send = {
               message : x.S,
             }
-            //socket.emit("deleteRoom", send)
-            console.log(send)
-            currentRoom = roomList[0];
-            console.log(currentRoom)
-            //socket.emit("change room", currentRoom);
-            //invites.removeChild(invites.childNodes[index])
-            //console.log(inviteList.childNodes);
+            socket.emit("deleteRoom", send)
+
+            //what if leaving current room?
+            //socket.emit('refresh', currentRoom);
+            //socket.emit("reload", "r")
 
           } 
         }
@@ -242,15 +231,15 @@
     })
 
     currentRoom = msg[1].currentRoom;
-    console.log("Current room is: "+ currentRoom);
+
+    console.log("Loading room with current room of: " + currentRoom)
 
     msg[1].invites.forEach(x=> {
       var item = document.createElement('li');
       item.innerHTML += '<form id="'+ x.S +'" action="" class="flex">'+x.S+'<input id = "'+x.S+'_" class = "form-control" placeholder="Yes to accept, No to decline."></form>'
-      console.log(item.innerHTML)
 
       invites.appendChild(item);
-      inviteList.push(item);
+      inviteList.push(x.S);
 
       var invId = document.getElementById(x.S);
       var invIdValue = document.getElementById(x.S+"_");
@@ -262,9 +251,7 @@
 
         if(invIdValue.value) {
             if (invIdValue.value == "Yes") {
-            console.log(x.S)
-            //console.log(invIdValue.value)
-            console.log("add room")
+
 
             var send = {
               message : x.S,
@@ -272,24 +259,19 @@
             }
             //socket.emit("sendInvite", send);
             socket.emit('addRoom', send);
-            socket.emit("deleteInvite", send);
+            //socket.emit("deleteInvite", send);
 
             
 
-            var index = inviteList.indexOf(item);
-            inviteList.splice(index,1);
+            //var index = inviteList.indexOf(item);
+            //inviteList.splice(index,1);
             invId.parentNode.removeChild(invId); 
-            //invites.removeChild(invites.childNodes[index])
-            //console.log(inviteList.childNodes)
 
           } else {
-            console.log("failed room")
 
-            var index = inviteList.indexOf(item);
-            inviteList.splice(index,1);
+            //var index = inviteList.indexOf(item);
+            //inviteList.splice(index,1);
             invId.parentNode.removeChild(invId); 
-            //invites.removeChild(invites.childNodes[index])
-            //console.log(inviteList.childNodes)
 
             var send = {
               message : x.S,
@@ -305,46 +287,190 @@
 
     })
 
+    console.log(inviteList);
+
 
     
   });
 
-  socket.on('refr', function(msg) {
-    var newMessage = true;
-    console.log(currentRoom)
-    msg[0].Items.forEach(x => {
+  socket.on('chang', function(msg) {
+    console.log("receive chang")
+    messages.innerHTML = "";
+    currentRoom = msg[1].currentRoom;
 
+    if (msg[0] != null) {
+
+      msg[0].Items.sort((x, y) => y.timestamp - x.timestamp);
+
+      msg[0].Items.forEach(x => {
       var item = document.createElement('li');
       if(x.author.S == msg[1].user) {
         item.className = "r";
-      }   
-      item.textContent = x.message.S;
+      }
+      item.textContent = "(" + x.author.S + ") :" + x.message.S;
+      messages.appendChild(item);
+      messageList.push(item)
+      window.scrollTo(0, document.body.scrollHeight);
+      })
+}
 
-      for (var i = 0; i < messageList.length; i++) {
-        if(messageList[i].textContent == item.textContent && messageList[i].className == item.className) {
-          newMessage = false;
+  })
+
+  socket.on('refr', function(msg) {
+
+    if (msg[0] != null) {  
+
+      msg[0].Items.sort((x, y) => y.timestamp - x.timestamp);
+
+      msg[0].Items.forEach(x => {
+        var newMessage = true;
+        var item = document.createElement('li');
+        if(x.author.S == msg[1].user) {
+          item.className = "r";
+        }   
+        item.textContent = "(" + x.author.S + ") :" + x.message.S;
+
+        for (var i = 0; i < messageList.length; i++) {
+          if(messageList[i].textContent == item.textContent && messageList[i].className == item.className) {
+            newMessage = false;
+          }
+        }
+        if (newMessage) {
+          messages.appendChild(item);
+          messageList.push(item);
+        }
+        newMessage = true;  
+      })
+    }
+
+    
+    
+
+    msg[1].rooms.forEach( x => {
+      var newRoom = true;
+      var item = document.createElement('li');
+      item.innerHTML += '<form id="'+ x.S +'_R" action="" class="flex"><input id="roomBtn" type="button" class="flex btn btn-outline-primary" value='+ x.S + ' onclick= changeRoom("' +x.S+ '") /> <input id = "'+x.S+'_RV" class = "form-control" placeholder="Type Leave to leave."></form>'
+
+      for (var i = 0; i < roomList.length; i++) {
+        if(roomList[i] == x.S) {
+          newRoom = false;
         }
       }
-      if (newMessage) {
-        console.log("new message")
-        messages.appendChild(item);
-        messageList.push(item);
+
+      if (newRoom) {
+        rooms.appendChild(item);
+        roomList.push(x.S);
       }
-      newMessage = true;  
+      newRoom = false;
+
+      var roomId = document.getElementById(x.S+"_R");
+      var roomIdVal = document.getElementById(x.S+"_RV");
+
+      roomId.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        if(roomIdVal.value) {
+            if (roomIdVal.value == "Leave") {
+            
+            var send = {
+              message : x.S,
+              room : currentRoom
+            }
+            var index = roomList.indexOf(x.S);
+            if (index == 0) {
+              roomList.shift()
+            } else {
+              roomList = roomList.splice(index-1,1);
+            }
+            var send = {
+              message : x.S,
+            }
+            socket.emit("deleteRoom", send)
+
+          } 
+        }
+        
+      });
+
+      
+    })
+
+    currentRoom = msg[1].currentRoom;
+
+    console.log("Refreshed and new current room is: " + currentRoom)
+
+    msg[1].invites.forEach(x=> {
+      var newInvite = true;
+      var item = document.createElement('li');
+      item.innerHTML += '<form id="'+ x.S +'" action="" class="flex">'+x.S+'<input id = "'+x.S+'_" class = "form-control" placeholder="Yes to accept, No to decline."></form>'
+
+
+      for (var i = 0; i < inviteList.length; i++) {
+        if(inviteList[i] == x.S) {
+          console.log("false")
+          newInvite = false;
+        }
+      }
+
+      if (newInvite) {
+        console.log(inviteList);
+        console.log(x.S)
+        invites.appendChild(item);
+        inviteList.push(x.S);
+      }
+
+      newInvite = false;
+
+      var invId = document.getElementById(x.S);
+      var invIdValue = document.getElementById(x.S+"_");
+
+
+      invId.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+
+        if(invIdValue.value) {
+            if (invIdValue.value == "Yes") {
+
+            var send = {
+              message : x.S,
+              room : currentRoom
+            }
+            socket.emit('addRoom', send);
+            //socket.emit("deleteInvite", send);
+            //socket.emit('refresh', currentRoom);
+            //var index = inviteList.indexOf(item);
+            //inviteList.splice(index,1);
+            invId.parentNode.removeChild(invId); 
+
+          } else {
+
+            var send = {
+              message : x.S,
+              room : currentRoom
+            }
+
+            socket.emit("deleteInvite", send);
+            invId.parentNode.removeChild(invId); 
+
+          }
+      }
+        
+    });
+
     })
     
   });
 
 
   form.addEventListener('submit', function(e) {
-    console.log("werg")
     e.preventDefault();
     if (input.value) {
-      console.log("werb")
 
       var send = {
         message : input.value,
-        room : currentRoom
+        room : currentRoom,
+        sender : person
       }
       socket.emit('test', send);
       input.value = '';
@@ -352,51 +478,51 @@
   });
 
   function changeRoom(e) {
-    console.log(e);
 
     if (e != currentRoom) {
-      console.log(e);
       socket.emit("change room", e)
     }
 
   }
 
   roomForm.addEventListener('submit', function(e) {
-    console.log(inputRoom.value);
     e.preventDefault();
     if (inputRoom.value) {
-      console.log("werb")
 
       var send = {
         message : inputRoom.value,
         room : currentRoom
       }
       socket.emit("sendInvite", send);
+      socket.emit('refresh', currentRoom);
       //socket.emit('addRoom', send);
-      input.value = '';
+      Room.value = '';
     }
   });
 
   inviteForm.addEventListener('submit', function(e) {
     e.preventDefault();
     if (inviteFormInput.value) {
-      console.log(currentRoom)
 
       var send = {
         message : inviteFormInput.value,
         room : currentRoom
       }
       socket.emit("sendGroupInvite", send);
+      socket.emit('refresh', currentRoom);
       //socket.emit('addRoom', send);
-      input.value = '';
+      inviteFormInput.value = '';
     }
   });
   
 
   setInterval(function() {
-    //console.log("refresh")
-    socket.emit('refresh', currentRoom);
-  }, 2000);
+    console.log("Refreshing with current room of "+ currentRoom);
+    if(currentRoom != null) {
+      socket.emit('refresh', currentRoom);
+    }
+    
+  }, 3000);
 
 
 
