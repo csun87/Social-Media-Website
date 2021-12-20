@@ -107,6 +107,7 @@
               $.post("/makecomment", data, function(x) {
                 if (x.success) {
                   getPosts(); // REPLACE LATER WITH NON-RELOAD FUNCTION
+                  document.getElementById(key + '-make-comment-text').value = "";
                 } else {
                   alert(x.msg);
                 }
@@ -144,6 +145,7 @@
           $.post("/makepostwall", data, function(x) {
             if (x.success) {
               getPosts();
+              document.getElementById("make-post-text").value = "";
             } else {
               alert(x.msg);
             }

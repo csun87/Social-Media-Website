@@ -192,6 +192,7 @@ const signupUser = function(req, res) {
           msg: JSON.stringify(err, null, 2)
         });
       } else {
+        req.session.username = username;
         return res.send({
           success: true,
           msg: null
