@@ -580,6 +580,145 @@ const addRoom = function(username, newRoomName, callback) {
   
 }
 
+const deleteRoom = function(username, room, callback) {
+
+  const params = {
+    TableName: 'users',
+    KeyConditionExpression: '#y = :x',
+    ExpressionAttributeNames: {
+      '#y': 'username'
+    },
+    ExpressionAttributeValues: {
+      ':x': {
+        'S': username
+      }
+    }
+  };
+  db.query(params, function(err, data) {
+
+    console.log("del rooms")
+    if (err || data.Items.length == 0) {
+      callback(err, null);
+    } else {
+      callback(err, data);
+
+      var rooms;
+
+      if (data.Items[0].rooms != null) {
+        rooms = data.Items[0].rooms.L
+
+        var index = -1;
+
+        console.log(room)
+        rooms.forEach(x=>{
+          if (x.S == room) {
+            console.log(x.S)
+
+            index = rooms.indexOf(x)
+
+            const params = {
+              TableName: "users",
+              Key: {
+                "username": {
+                  "S": username
+                }
+              },
+              UpdateExpression: "set rooms = :x",
+              ExpressionAttributeValues: {
+                ":x": {
+                  "L": rooms.splice(index, 1)
+                }
+              }
+            };
+            db.updateItem(params, function(err, data) {
+              console.log(err)
+              console.log(data)
+              callback(err, data);
+            });
+          }
+        })
+        //console.log(newInviteList)
+      } else {
+        
+      }
+
+      
+
+
+    }
+  });
+  
+}
+
+const deleteInvite = function(username, sender, callback) {
+
+  const params = {
+    TableName: 'users',
+    KeyConditionExpression: '#y = :x',
+    ExpressionAttributeNames: {
+      '#y': 'username'
+    },
+    ExpressionAttributeValues: {
+      ':x': {
+        'S': username
+      }
+    }
+  };
+  db.query(params, function(err, data) {
+    if (err || data.Items.length == 0) {
+      callback(err, null);
+    } else {
+      callback(err, data);
+
+      var invites;
+
+      if (data.Items[0].chatInvites != null) {
+        invites = data.Items[0].chatInvites.L
+
+        console.log(invites)
+
+        var index = -1;
+        invites.forEach(x=>{
+          if (x.S == sender) {
+            console.log("AAA")
+            index = invites.indexOf(x)
+            console.log(index)
+            console.log(invites.splice(index, 1))
+
+            const params = {
+              TableName: "users",
+              Key: {
+                "username": {
+                  "S": username
+                }
+              },
+              UpdateExpression: "set chatInvites = :x",
+              ExpressionAttributeValues: {
+                ":x": {
+                  "L": invites.splice(index, 1)
+                }
+              }
+            };
+            db.updateItem(params, function(err, data) {
+              console.log(err)
+              console.log(data)
+              callback(err, data);
+            });
+          }
+        })
+        //console.log(newInviteList)
+      } else {
+        
+      }
+
+      
+
+
+    }
+  });
+  
+}
+
 const addInvite = function(username, recepient, callback) {
 
   const params = {
@@ -604,8 +743,8 @@ const addInvite = function(username, recepient, callback) {
 
       if (data.Items[0].chatInvites != null) {
         invites = data.Items[0].chatInvites.L
+        //console.log(invites)
 
-        console.log(rooms);
         invites.push({"S": username})
       } else {
         invites = [{"S": username}]
@@ -633,7 +772,6 @@ const addInvite = function(username, recepient, callback) {
 
     }
   });
-
   
 }
 
@@ -659,7 +797,9 @@ const database = {
   make_comment: makeComment,
   get_Messages : getAllMessages,
   add_room : addRoom,
-  add_invite : addInvite
+  delete_room : deleteRoom,
+  add_invite : addInvite,
+  delete_invite : deleteInvite
 };
 
 module.exports = database;

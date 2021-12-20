@@ -459,6 +459,15 @@ const getComments = function(req, res) {
 }
 
 
+
+//refresh when leaving page
+//deleting the only room
+//initializing no rooms
+
+
+
+
+
 //SOCKET IO ROUTES
 
 const chat = function(req, res) {
@@ -472,9 +481,15 @@ const chat = function(req, res) {
 };
 
 const io_on = function(socket) {
-  console.log('a user connected');
 
+  if (!socket.handshake.session.username) {
+    //res.redirect('/') //how to do this?
+  } else {
+  console.log('a user connected');
   console.log(socket.handshake.session);
+
+  socket.emit('init', socket.handshake.session.username)
+  console.log("init")
 
   var r;
   var invs;
@@ -485,28 +500,50 @@ const io_on = function(socket) {
     invs = data.Items[0].chatInvites.L;
 
     //Getting all messages on page load
-    db.get_Messages(r[0].s, function(err,data) {
-      if(err) {
-        console.log(err)
-      } else {
-        //console.log(data);
-        var send = []
-  
-        var moreData = {
-          user : socket.handshake.session.username,
-          rooms : r,
-          invites: invs,
-          currentRoom : r[0].S
+    if(r[0] != null) {
+      db.get_Messages(r[0].s, function(err,data) {
+        if(err) {
+          console.log(err)
+        } else {
+          //console.log(data);
+          var send = []
+    
+          var moreData = {
+            user : socket.handshake.session.username,
+            rooms : r,
+            invites: invs,
+            currentRoom : r[0].S
+          }
+          send.push(data);
+          send.push(moreData)
+          //console.log(send)
+          socket.emit('prev_messages', send);
+    
+          socket.emit('chat')
         }
-        send.push(data);
-        send.push(moreData)
-        //console.log(send)
-        socket.emit('prev_messages', send);
+    
+        })
+
+    } else if (invs[0] != null) {
+
+      console.log(invs[0])
+      var send = []
   
-        socket.emit('chat')
+      var moreData = {
+        user : socket.handshake.session.username,
+        rooms : r,
+        invites: invs,
+        currentRoom : null
       }
-  
-      })
+      send.push(null);
+      send.push(moreData)
+      //console.log(send)
+      socket.emit('prev_messages', send);
+
+      socket.emit('chat')
+
+    }
+    
 
   })
   
@@ -566,6 +603,8 @@ const io_on = function(socket) {
         } else {
            console.log(data);
            var send = []
+
+           console.log(arg)
      
            var moreData = {
              user : socket.handshake.session.username,
@@ -584,16 +623,8 @@ const io_on = function(socket) {
   })
 
 
-  //make invites disappear
-  //fix invites duplicating
-  //add people to existing chats
-  //sort messages
-  //leave rooms
-  //front end + vront end
-
-  socket.on("sendInvite", arg => {
+  socket.on("sendGroupInvite", arg => {
     db.check_friends(socket.handshake.session.username, function(err, da) {
-
       var t = da.Items[0].friends.SS;
       console.log(da.Items[0].friends.SS);
       console.log(arg.message)
@@ -601,21 +632,30 @@ const io_on = function(socket) {
       var u = t.includes(arg.message);
 
       if (u) {
-        db.login_lookup(socket.handshake.session.username, function(err, d) {
+        //check if the invite exists for the other person
+        db.login_lookup(arg.message, function(err, d) {
           var invExists = false;
-
           if (d.Items[0].chatInvites != null) {
-            invList = d.Items[0].rooms.L
+            invList = d.Items[0].chatInvites.L
+            console.log(invList)
+            console.log("yes")
+            //check if our user is in their invitelist
             invList.forEach(x=>{
-              if(x.S == arg.message) {
+              console.log(x.S)
+              console.log(arg.message)
+              if(x.S == socket.handshake.session.username) {
                 invExists = true;
+                console.log(invExists)
               }
             })
           }   
+
+          console.log(invExists)
           if(!invExists) {
+            console.log("yesyes")
             //add invite for the recepient
-            db.add_invite(socket.handshake.session.username, arg.message, function(err,dat){
-              console.log(dat)
+            db.add_invite(arg.room, arg.message, function(err,dat){
+              //console.log(dat.Items[0].chatInvites)
             })
           }
         })
@@ -625,6 +665,59 @@ const io_on = function(socket) {
     })
   })
 
+
+  socket.on("sendInvite", arg => {
+    db.check_friends(socket.handshake.session.username, function(err, da) {
+      var t = da.Items[0].friends.SS;
+      console.log(da.Items[0].friends.SS);
+      console.log(arg.message)
+
+      var u = t.includes(arg.message);
+
+      if (u) {
+        //check if the invite exists for the other person
+        db.login_lookup(arg.message, function(err, d) {
+          var invExists = false;
+          if (d.Items[0].chatInvites != null) {
+            invList = d.Items[0].chatInvites.L
+            console.log(invList)
+            console.log("yes")
+            //check if our user is in their invitelist
+            invList.forEach(x=>{
+              console.log(x.S)
+              console.log(arg.message)
+              if(x.S == socket.handshake.session.username) {
+                invExists = true;
+                console.log(invExists)
+              }
+            })
+          }   
+
+          console.log(invExists)
+          if(!invExists) {
+            console.log("yesyes")
+            //add invite for the recepient
+            db.add_invite(socket.handshake.session.username, arg.message, function(err,dat){
+              //console.log(dat.Items[0].chatInvites)
+            })
+          }
+        })
+
+      }
+      
+    })
+  })
+
+  socket.on("deleteRoom", arg => {
+
+    console.log(arg.message)
+
+    console.log("delroom received")
+    db.delete_room(socket.handshake.session.username, arg.message, function(err, data){
+      
+    })
+
+  })
 
   socket.on("addRoom", arg => {
 
@@ -705,8 +798,18 @@ const io_on = function(socket) {
         //include some error message
       }
     }) 
-  })  
+  }) 
+  
+  
+  socket.on("deleteInvite", arg => {
+    
+    db.delete_invite(socket.handshake.session.username, arg.message, function(err, data){
+      
+    })
 
+  })
+
+}
 }
 
 // SETTINGS ROUTES
