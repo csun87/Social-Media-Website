@@ -192,6 +192,7 @@ const signupUser = function(req, res) {
           msg: JSON.stringify(err, null, 2)
         });
       } else {
+        req.session.username = username;
         return res.send({
           success: true,
           msg: null
@@ -1431,6 +1432,23 @@ const updateVisualization = function(req, res) {
   });
 }
 
+const postNews = function(req, res) {
+  db.get_news_feed(req.session.username, function(err, data) {
+    if (err) {
+      res.send({
+        success: false,
+        msg: JSON.stringify(err, null, 2)
+      });
+    } else {
+      res.send({
+        success: true,
+        data: data.Items[0]
+      });
+    }
+  });
+}
+
+
 const routes = {
   get_login_page: renderLogin,
   get_user: getUser,
@@ -1465,6 +1483,7 @@ const routes = {
   get_visualizer: getVisualizer,
   init_visualization: initVisualization,
   update_visualization: updateVisualization,
+  post_newsfeed: postNews
 };
 
 module.exports = routes;
