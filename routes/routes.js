@@ -1467,9 +1467,36 @@ const postNews = function(req, res) {
         msg: JSON.stringify(err, null, 2)
       });
     } else {
-      res.send({
-        success: true,
-        data: data.Items[0]
+      var docClient = new AWS.DynamoDB.DocumentClient();
+      const promises = [];
+      data.Items.sort((x, y) => parseFloat(y.weight.N) - parseFloat(x.weight.N));
+      data.Items.splice(5);
+      const items = data.Items;
+      items.forEach(function(item) {
+        const params = {
+          TableName: "news",
+          KeyConditionExpression: "#url = :url",
+          ExpressionAttributeNames: {
+            "#url": "url"
+          },
+          ExpressionAttributeValues: {
+            ":url": item.url.S
+          }
+        };
+        promises.push(docClient.query(params).promise().then(
+          function(good) {
+            return good.Items[0];
+          },
+          function(err) {
+            console.error("Unable to query. Error: ", JSON.stringify(err, null, 2));
+          }
+        ));
+      });
+      Promise.all(promises).then(function(x) {
+        return res.send({
+          success: true,
+          data: x
+        });
       });
     }
   });

@@ -218,21 +218,18 @@
 
   <script>
 
-    function getFriends() {
+    function getNews() {
       const username = "<%= username %>";
-      $.post("/getfriends", {}, function(x) {
-        const friends = x.data.friends.SS;
-        friends.forEach(function(friend) {
-          if (friend === username) {
-            return;
-          }
-          $("#news-list").append("<li> <a href=\"/wall?username=" + friend 
-            + "\">" + friend + " <span class=\"dot-green\"></span>" + "</a>" + "</li>");
+      $.post("/postnewsfeed", {}, function(x) {
+        const data = x.data;
+        data.forEach(function(item) {
+          $("#news-list").append("<li>" + '<h3><a href="' + item.url + '">' + item.headline + "</a></h3></li>");
         });
       });
     }
+
     $(document).ready(function() {
-      getFriends();
+      getNews();
     });
   </script>
 </html>
