@@ -66,7 +66,7 @@ app.get("/getFriends/:user", routes.update_visualization);
 io.on('connection', routes.io_on);
 
 function adsorption() {
-   if (new Date().getMinutes() === 0) {
+   if (new Date().getMinutes() === 45) {
       require("child_process").spawn('mvn', ['exec:java@livy']);
    }
 }
