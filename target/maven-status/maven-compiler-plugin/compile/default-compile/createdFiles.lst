@@ -1,0 +1,11 @@
+edu/upenn/cis/nets212/hw3/livy/SocialRankJob.class
+edu/upenn/cis/nets212/hw3/livy/MyPair.class
+edu/upenn/cis/nets212/storage/DynamoConnector$LocalServer.class
+edu/upenn/cis/nets212/hw3/ComputeRanks.class
+edu/upenn/cis/nets212/config/Config.class
+edu/upenn/cis/nets212/hw3/livy/ComputeRanksLivy.class
+edu/upenn/cis/nets212/hw3/livy/DynamoConnector.class
+edu/upenn/cis/nets212/storage/SparkConnector.class
+edu/upenn/cis/nets212/hw3/Node.class
+edu/upenn/cis/nets212/storage/DynamoConnector.class
+edu/upenn/cis/nets212/hw3/ComputeRanksNews.class

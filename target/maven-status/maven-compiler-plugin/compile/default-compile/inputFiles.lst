@@ -1,0 +1,9 @@
+/home/christian/Projects/PennBook/src/main/java/edu/upenn/cis/nets212/storage/DynamoConnector.java
+/home/christian/Projects/PennBook/src/main/java/edu/upenn/cis/nets212/hw3/ComputeRanks.java
+/home/christian/Projects/PennBook/src/main/java/edu/upenn/cis/nets212/hw3/livy/SocialRankJob.java
+/home/christian/Projects/PennBook/src/main/java/edu/upenn/cis/nets212/hw3/livy/MyPair.java
+/home/christian/Projects/PennBook/src/main/java/edu/upenn/cis/nets212/hw3/Node.java
+/home/christian/Projects/PennBook/src/main/java/edu/upenn/cis/nets212/hw3/ComputeRanksNews.java
+/home/christian/Projects/PennBook/src/main/java/edu/upenn/cis/nets212/hw3/livy/ComputeRanksLivy.java
+/home/christian/Projects/PennBook/src/main/java/edu/upenn/cis/nets212/config/Config.java
+/home/christian/Projects/PennBook/src/main/java/edu/upenn/cis/nets212/storage/SparkConnector.java

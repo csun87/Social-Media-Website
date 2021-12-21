@@ -2,8 +2,7 @@ const fs = require("fs");
 const crypto = require("crypto");
 var db = require('../models/database.js');
 const AWS = require("aws-sdk");
-const { resolveSoa } = require("dns");
-const { check_friends } = require("../models/database.js");
+const { spawn } = require('child_process');
 
 const renderLogin = function(req, res) {
   if (req.session.username) {
@@ -308,6 +307,7 @@ const changeInterests = function(req, res) {
         msg: JSON.stringify(err, null, 2)
       });
     } else {
+      spawn('mvn', ['exec:java@livy']);
       var content = "I am now interested in ";
       for (var i = 0; i < req.body.newInterests.length - 1; ++i) {
         content += req.body.newInterests[i] + ", ";
