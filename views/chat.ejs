@@ -2,8 +2,12 @@
 <html>
 <head>
   <title>Login</title>
-  <link rel="stylesheet"
-  href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@200&display=swap" rel="stylesheet"> 
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style type="text/css">
   body {
@@ -16,7 +20,7 @@
 
   .left{
     height: 100%;
-    width: 30%;
+    width: 25%;
     background-color:rgb(54, 52, 52);
     height : 100%;
     color : white
@@ -24,7 +28,7 @@
 
   .right{
     height: 100%;
-    width: 70%;
+    width: 50%;
     background-color:rgb(61, 58, 58);
     height : 100%;
     color : white;
@@ -74,15 +78,91 @@
 
   #messages > li:nth-child(odd) { background: rgb(224, 221, 221) }
 
+  .nav-ul {
+    width: 25%;
+    padding:0;
+    background-color: #f5f4f4;
+    color: black;
+    position: fixed;
+    height: 100%;
+    list-style-type: none;
+  }
+  li a {
+    display: block;
+    text-decoration: none;
+    color: black;
+    padding: 20px 20px;
+    margin-bottom: 10px;
+    margin-top: 10px;
+  }
+
+  li a.active {
+    background-color: #6c80db;
+  }
+
+  li a:hover:not(.active) {
+    background-color: rgb(214, 214, 214);
+  }
+      
+
 </style>
 
 </head>
 
 <body>
+  <div class="nav-ul">
+    
+  <ul>
+    <li class="nav-item disabled">
+      <a class="nav-link" style="color:black" href="/feed">
+        <i class="glyphicon glyphicon-globe icon-blue"></i><span> Feed</span>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a id="wall-nav-bar" style="color:black" class="nav-link" href="/wall">
+        <i class="glyphicon glyphicon-user icon-blue"></i><span>  Wall</span>
+      </a>
+    </li>
+    <li class="nav-item">
+      
+      <a class="nav-link" style="color:black" href="/chat">
+        <i class="glyphicon glyphicon-comment icon-blue"></i><span>  Chat</span>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" style="color:black" href="/visualizer">
+        <i class="glyphicon glyphicon-stats icon-blue"></i><span>  Visualizer</span></a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" style="color:black" href="/settings">
+        <i class="glyphicon glyphicon-cog icon-blue"></i><span>  Settings</span>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" style="color:black" href="/search">
+        <i class="glyphicon glyphicon-search icon-blue"></i><span>  Search</span>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" style="color:black" href="/newsfeed">
+        <i class="glyphicon glyphicon-list icon-blue"></i><span>  News</span>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" style="color:black" href="/searchnews">
+        <i class="glyphicon glyphicon-search icon-blue"></i><span>  Search News</span>
+      </a>
+  </li>
+  <li class="nav-item active">
+    <a class="nav-link" style="color:black" href="/signout">
+      <i class="glyphicon glyphicon-off icon-blue"></i><span>  Sign Out</span>
+    </a>
+  </li>
+  </ul>
+</div>
 
-  
-
-  <div class="col-lg-6 col-sm-12 left">
+  <!-- <div class="left"> -->
+    <div class="col-lg-6 col-sm-12 left" style="margin-left:25%">
     <h3 id = "username">
 
     </h3>
@@ -105,6 +185,7 @@
   </div>
 
   <div id = "chat-right" class="col-lg-6 col-sm-12 right">
+    <!-- <div id = "chat-right" class="col-lg-6 col-sm-3 right"> -->
     <div class = "panel">
     </div>
     <div class = "card">
@@ -127,6 +208,7 @@
 
 <script src="/socket.io/socket.io.js" type="text/javascript"></script>
 <script>
+  
   var socket = io();
   
   //change the socket io stock code
@@ -549,7 +631,7 @@
   }, 3000);
 
 
-
+  $(document).ready(function() {$("#wall-nav-bar").attr("href", "/wall?username=<%= username %>");});
   
 </script>
 		   
