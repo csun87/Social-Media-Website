@@ -237,6 +237,10 @@
     person = msg
   })
 
+  socket.on("Error", arg =>{
+    alert(arg)
+  })
+
   socket.on('chat message', function(msg) {
     var item = document.createElement('li');
     item.textContent = "(" + msg.sender + ") :" + msg.message;
