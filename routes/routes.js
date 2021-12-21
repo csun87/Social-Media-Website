@@ -1502,6 +1502,33 @@ const postNews = function(req, res) {
   });
 }
 
+const newsSearchScan = function(req, res) {
+  if (!req.session.username) {
+    res.redirect("/");
+    return;
+  }
+  var text = req.body.text;
+  var words = text.split(' ');
+
+  console.log("words: " + words);
+
+  db.news_search_scan(words, function(err, data) {
+    if (err) {
+      res.send({
+        success: false,
+        msg: JSON.stringify(err, null, 2)
+      });
+    } else {
+      res.send({
+        success: true,
+        data: data
+      });
+    }
+  });
+}
+
+
+
 
 const routes = {
   get_login_page: renderLogin,
@@ -1537,7 +1564,8 @@ const routes = {
   get_visualizer: getVisualizer,
   init_visualization: initVisualization,
   update_visualization: updateVisualization,
-  post_newsfeed: postNews
+  post_newsfeed: postNews,
+  news_search_scan: newsSearchScan
 };
 
 module.exports = routes;

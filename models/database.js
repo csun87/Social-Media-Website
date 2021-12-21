@@ -909,6 +909,37 @@ const getNewsFeed = function(username, callback) {
   });
 }
 
+const newsSearchScan = function(words, callback) {
+
+  // keyword = keyword.toLowerCase();
+
+  var docClient = new AWS.DynamoDB.DocumentClient();
+
+  var params = {
+    TableName: "searchNews"
+  };
+
+  docClient.scan(params, onScan);
+
+  function onScan(err, data) {
+    if (err) {
+      console.log("error scanning db");
+    } else {
+      var table = [];
+      // console.log("words: " + words);
+      data.Items.forEach(function(item) {
+        // table.push(item);
+        if (words.indexOf(item.keyword) > -1) {
+          // console.log(item.keyword);
+          table.push(item);
+        }
+      });
+      // console.log(table);
+      callback(err, table);
+    }
+  }
+}
+
 const database = {
   login_lookup: loginLookup,
   add_user: addUser,
@@ -937,7 +968,8 @@ const database = {
   add_invite : addInvite,
   delete_invite : deleteInvite,
   news_search : newsSearch,
-  get_news_feed : getNewsFeed
+  get_news_feed : getNewsFeed,
+  news_search_scan : newsSearchScan
 };
 
 module.exports = database;
