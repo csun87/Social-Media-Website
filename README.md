@@ -1,48 +1,80 @@
 Group: G13
 
 Group Members (Name & PennKey):
+
 	Christian Sun (chsun)
 	Kishen Sivabalan (kishens)
 	William Fan (willfan)
 	Belinda Xi (belindax)
 
 
+
 Implemented Features 
+
 	All required features in the writeup have been implemented
 
 
+
 Extra Credit Tasks
+
 	N/A
 
 
+
 Source Files
+
 	app.js
+	
 	package.json
+	
 	package-lock.json
+	
 	pom.xml
+	
 	models/database.js
+	
 	routes/routes.js
+	
 	views/signup.ejs
+	
 	views/login.ejs
+	
 	views/chat.ejs
+	
 	views/friendvisualizer.ejs
+	
 	views/main.ejs
+	
 	views/newsfeed.ejs
+	
 	views/search.ejs
+	
 	views/searchnews.ejs
+	
 	views/settings.ejs
+	
 	views/signup.ejs
+	
 	views/wall_friend.ejs
+	
 	views/wall_stranger.ejs
+	
 	views/wall_self.ejs
+	
 	src/main/java/edu/upenn/cis/nets212/hw3/livy/ComputeRanksLivy.java
+	
 	src/main/java/edu/upenn/cis/nets212/hw3/livy/MyPair.java
+	
 	src/main/java/edu/upenn/cis/nets212/hw3/livy/SocialRankJob.java
+	
 	target/nets212-hw3-0.0.1-SNAPSHOT.jar
 
 
+
 Declaration that code submitted was written by us
+
 	We (Christian Sun, Kishen Sivabalan,  William Fan and Belinda Xi), declare that all code submitted within this project was written by us (excluding code given to us from previous HW files)
+
 
 Instructions
 
