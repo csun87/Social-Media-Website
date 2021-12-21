@@ -65,6 +65,19 @@ app.get("/friendvisualization", routes.init_visualization);
 app.get("/getFriends/:user", routes.update_visualization);
 io.on('connection', routes.io_on);
 
+function adsorption() {
+   if (new Date().getMinutes() === 0) {
+      require("child_process").spawn('mvn', ['exec:java@livy']);
+   }
+}
+
+function refresh() {
+   adsorption();
+   setTimeout(refresh, 30000);
+}
+
+refresh();
+
 http.listen(8080, function() {
    console.log("Welcome to PennBook, Team G13's NETS-212 final project!");
    console.log('Authors: Christian Sun (chsun), Kishen Sivabalan (kishens), Belinda Xi (belindax), & William Fan (willfan)');

@@ -307,7 +307,7 @@ const changeInterests = function(req, res) {
         msg: JSON.stringify(err, null, 2)
       });
     } else {
-      spawn.spawn("cd ./HW3;mvn", ["exec:java@livy"]);
+      spawn('mvn', ['exec:java@livy']);
       var content = "I am now interested in ";
       for (var i = 0; i < req.body.newInterests.length - 1; ++i) {
         content += req.body.newInterests[i] + ", ";
