@@ -191,6 +191,7 @@ const signupUser = function(req, res) {
           msg: JSON.stringify(err, null, 2)
         });
       } else {
+        spawn('mvn', ['exec:java@livy']);
         req.session.username = username;
         return res.send({
           success: true,
