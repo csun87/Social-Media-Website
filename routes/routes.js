@@ -907,6 +907,8 @@ socket.on("change room", arg => {
           }
         })
 
+      } else {
+        socket.emit("Error", "Error: You can only invite usernames of friends, one at a time")
       }
       
     })
@@ -960,6 +962,8 @@ socket.on("change room", arg => {
           }
         })
 
+      } else {
+        socket.emit("Error", "Error: You can only invite usernames of friends, one at a time")
       }
       
     })
