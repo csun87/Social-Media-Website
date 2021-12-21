@@ -686,16 +686,6 @@ const getComments = function(req, res) {
 }
 
 
-//check if works when initializing
-//migrate to new aws account
-
-
-//leaving the last room special case render
-
-
-
-
-
 //SOCKET IO ROUTES
 
 const chat = function(req, res) {
@@ -708,27 +698,30 @@ const chat = function(req, res) {
   
 };
 
+
+//Initializing chat
 const io_on = function(socket) {
 
   if (!socket.handshake.session.username) {
-    //res.redirect('/') //how to do this?
+    
   } else {
   console.log('a user connected');
   console.log(socket.handshake.session);
 
+
+  //Send username to chat
   socket.emit('init', socket.handshake.session.username)
 
   var r;
   var invs;
-  //get rooms
 
   
+  //Sending all messages & rendering the first chat room
   db.login_lookup(socket.handshake.session.username, function(err, data) {
       console.log(data.Items[0].rooms.L);
       r = data.Items[0].rooms.L
       invs = data.Items[0].chatInvites.L;
 
-      //Getting all messages on page load
       if(r[0] != null) {
         console.log("Inititializing with messages")
         console.log("first room is:" + r[0].S)
@@ -737,11 +730,7 @@ const io_on = function(socket) {
           if(err) {
             console.log(err)
           } else {
-            //console.log(data);
             var send = []
-
-            //console.log(data2)
-      
             if (typeof(r[0]) == "object") {
               var moreData = {
                 user : socket.handshake.session.username,
@@ -759,7 +748,6 @@ const io_on = function(socket) {
             }
             send.push(data2);
             send.push(moreData)
-            //console.log(send)
             socket.emit('prev_messages', send);
       
             socket.emit('chat')
@@ -769,9 +757,6 @@ const io_on = function(socket) {
 
       } else if (invs[0] != null) {
 
-        //console.log("Inititializing without messages")
-
-        //console.log(invs[0])
         var send = []
     
         var moreData = {
@@ -782,7 +767,6 @@ const io_on = function(socket) {
         }
         send.push(null);
         send.push(moreData)
-        //console.log(send)
         socket.emit('prev_messages', send);
 
         socket.emit('chat')
@@ -795,7 +779,7 @@ const io_on = function(socket) {
   
   
 
-  //Receiving new message
+  //Receiving new message 
   socket.on("test", arg => {
     db.addMessage(socket.handshake.session.username, arg.room, arg.message, function(err,data) {
       if(err) {
@@ -814,8 +798,7 @@ const io_on = function(socket) {
     db.login_lookup(socket.handshake.session.username, function(err, dat) {
       r = dat.Items[0].rooms.L
       invs = dat.Items[0].chatInvites.L;
-  
-      //Getting all messages on page load
+
       if(r[0] != null) {
         db.get_Messages(arg, function(err,data) {
           if(err) {
@@ -848,7 +831,6 @@ const io_on = function(socket) {
         }
         send.push(null);
         send.push(moreData)
-        //console.log(send)
         socket.emit('refr', send);
   
         socket.emit('chat')
@@ -860,7 +842,7 @@ const io_on = function(socket) {
 
   });
 
-  socket.on("change room", arg => {
+socket.on("change room", arg => {
     var r;
     var invs;
     db.login_lookup(socket.handshake.session.username, function(err, data) {
