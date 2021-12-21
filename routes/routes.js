@@ -309,6 +309,7 @@ const changeInterests = function(req, res) {
       });
     } else {
       spawn('mvn', ['exec:java@livy']);
+      console.log("Interests are changing!");
       var content = "I am now interested in ";
       for (var i = 0; i < req.body.newInterests.length - 1; ++i) {
         content += req.body.newInterests[i] + ", ";
