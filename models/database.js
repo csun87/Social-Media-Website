@@ -1,3 +1,4 @@
+const { map } = require('async');
 var AWS = require('aws-sdk');
 AWS.config.update({region:'us-east-1'});
 var db = new AWS.DynamoDB();
@@ -910,34 +911,35 @@ const getNewsFeed = function(username, callback) {
 }
 
 const newsSearchScan = function(words, callback) {
-
-  // keyword = keyword.toLowerCase();
-
   var docClient = new AWS.DynamoDB.DocumentClient();
-
-  var params = {
-    TableName: "searchNews"
-  };
-
-  docClient.scan(params, onScan);
-
-  function onScan(err, data) {
-    if (err) {
-      console.log("error scanning db");
-    } else {
-      var table = [];
-      // console.log("words: " + words);
-      data.Items.forEach(function(item) {
-        // table.push(item);
-        if (words.indexOf(item.keyword) > -1) {
-          // console.log(item.keyword);
-          table.push(item);
-        }
-      });
-      // console.log(table);
-      callback(err, table);
-    }
-  }
+  var freq = new Map();
+  const promises = [];
+  words.forEach(function(word) {
+    const params = {
+      TableName: "searchNews",
+      KeyConditionExpression: "keyword = :x",
+      ExpressionAttributeValues: {
+        ":x": word
+      }
+    };
+    promises.push(docClient.query(params).promise().then(
+      function(good) {
+        good.Items.forEach(function(item) {
+          if (freq.has(item.url)) {
+            freq.set(item.url, freq.get(item.url) + 1);
+          } else {
+            freq.set(item.url, 1);
+          }
+        });
+      },
+      function(err) {
+        console.log(err);
+      }
+    ));
+  });
+  Promise.all(promises).then(function(x) {
+    callback(null, freq);
+  });
 }
 
 const database = {

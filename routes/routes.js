@@ -1,8 +1,10 @@
+const stemmer = require('stemmer');
 const fs = require("fs");
 const crypto = require("crypto");
 var db = require('../models/database.js');
 const AWS = require("aws-sdk");
 const { spawn } = require('child_process');
+
 
 const renderLogin = function(req, res) {
   if (req.session.username) {
@@ -1514,19 +1516,49 @@ const newsSearchScan = function(req, res) {
   }
   var text = req.body.text;
   var words = text.split(' ');
-
+  for (var i = 0; i < words.length; ++i) {
+    words[i] = stemmer(words[i].toLowerCase());
+  }
   console.log("words: " + words);
 
   db.news_search_scan(words, function(err, data) {
     if (err) {
-      res.send({
+      return res.send({
         success: false,
         msg: JSON.stringify(err, null, 2)
       });
     } else {
-      res.send({
-        success: true,
-        data: data
+      var docClient = new AWS.DynamoDB.DocumentClient();
+      const arr = [...data];
+      arr.sort((x, y) => y[1] - x[1]);
+      arr.splice(5);
+      const promises = [];
+      arr.forEach(function(item) {
+        const url = item[0];
+        const params = {
+          TableName: "news",
+          KeyConditionExpression: "#url = :url",
+          ExpressionAttributeNames: {
+            "#url": "url"
+          },
+          ExpressionAttributeValues: {
+            ":url": url
+          }
+        };
+        promises.push(docClient.query(params).promise().then(
+          function(good) {
+            return good.Items[0];
+          },
+          function(err) {
+            console.error("Unable to query. Error: ", JSON.stringify(err, null, 2));
+          }
+        ));
+      });
+      Promise.all(promises).then(function(x) {
+        return res.send({
+          success: true,
+          data: x,
+        });
       });
     }
   });
