@@ -63,6 +63,7 @@ app.post("/searchscan", routes.search_scan);
 app.get("/visualizer", routes.get_visualizer);
 app.get("/friendvisualization", routes.init_visualization);
 app.get("/getFriends/:user", routes.update_visualization);
+app.post("/newssearchscan", routes.news_search_scan);
 io.on('connection', routes.io_on);
 
 function adsorption() {
