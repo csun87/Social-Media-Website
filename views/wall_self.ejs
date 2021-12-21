@@ -278,7 +278,7 @@
     }
 
     $(document).ready(function() {
-      getPosts();
+      refreshPosts();
       $("#wall-nav-bar").attr("href", "/wall?username=<%= username %>");
       $.post("/getuser", {username: user}, function(x) {
         const data = x.data;
