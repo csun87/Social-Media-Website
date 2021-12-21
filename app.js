@@ -39,7 +39,7 @@ app.post("/getlastaction", routes.get_last_action);
 app.post("/checklogin", routes.check_login);
 app.get("/feed", routes.get_feed);
 app.get("/newsfeed", routes.get_newsfeed);
-app.post("/get_newsfeed", routes.post_newsfeed);
+app.post("/postnewsfeed", routes.post_newsfeed);
 app.get("/searchnews", routes.get_searchnews);
 app.get("/signout", routes.sign_out);
 app.get("/chat", routes.chat);
