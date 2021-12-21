@@ -585,8 +585,18 @@ const addRoom = function(username, newRoomName, callback) {
       if (data.Items[0].rooms != null) {
         rooms = data.Items[0].rooms.L
 
-        console.log(rooms);
-        rooms.push({"S": newRoomName})
+        var newRoom = true;
+
+        rooms.forEach(x=>{
+          if(x.S == newRoomName) {
+            newRoom = false
+          }
+        })
+
+        if(newRoom) {
+          rooms.push({"S": newRoomName})
+        }
+        
       } else {
         rooms = [{"S": newRoomName}]
       }

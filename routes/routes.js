@@ -742,11 +742,20 @@ const io_on = function(socket) {
 
             //console.log(data2)
       
-            var moreData = {
-              user : socket.handshake.session.username,
-              rooms : r,
-              invites: invs,
-              currentRoom : r[0].S
+            if (typeof(r[0]) == "object") {
+              var moreData = {
+                user : socket.handshake.session.username,
+                rooms : r,
+                invites: invs,
+                currentRoom : r[0].S
+              }
+            } else {
+              var moreData = {
+                user : socket.handshake.session.username,
+                rooms : r,
+                invites: invs,
+                currentRoom : null
+              }
             }
             send.push(data2);
             send.push(moreData)
@@ -989,11 +998,20 @@ const io_on = function(socket) {
               } else {
                 var send = []
           
-                var moreData = {
-                  user : socket.handshake.session.username,
-                  rooms : r,
-                  invites: invs,
-                  currentRoom : r[0].S
+                if (typeof(r[0]) == "object") {
+                  var moreData = {
+                    user : socket.handshake.session.username,
+                    rooms : r,
+                    invites: invs,
+                    currentRoom : r[0].S
+                  }
+                } else {
+                  var moreData = {
+                    user : socket.handshake.session.username,
+                    rooms : r,
+                    invites: invs,
+                    currentRoom : null
+                  }
                 }
                 send.push(data);
                 send.push(moreData)
@@ -1090,7 +1108,23 @@ const io_on = function(socket) {
                       if(err) {
                         console.log(err)
                       } else {
+                        console.log("Checking if invite is in list")
+                        console.log("Invite " + arg.message)
                         var send = []
+
+                        invs.forEach(x =>{
+                          console.log("Inv list item: " + x)
+                          if(x.S == arg.message) {
+                            console.log()
+                            var index = invs.indexOf(x)
+
+                            if(index == 0) {
+                              invs.shift()
+                            } else if (index > 0) {
+                              invs.splice(index, 1)
+                            }
+                          }
+                        })
                   
                         var moreData = {
                           user : socket.handshake.session.username,
@@ -1181,12 +1215,22 @@ const io_on = function(socket) {
                 //console.log(data);
                 var send = []
           
-                var moreData = {
-                  user : socket.handshake.session.username,
-                  rooms : r,
-                  invites: invs,
-                  currentRoom : r[0].S
+                if (typeof(r[0]) == "object") {
+                  var moreData = {
+                    user : socket.handshake.session.username,
+                    rooms : r,
+                    invites: invs,
+                    currentRoom : r[0].S
+                  }
+                } else {
+                  var moreData = {
+                    user : socket.handshake.session.username,
+                    rooms : r,
+                    invites: invs,
+                    currentRoom : null
+                  }
                 }
+                
                 send.push(data);
                 send.push(moreData)
                 //console.log(send)

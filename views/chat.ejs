@@ -231,6 +231,13 @@
     })
 
     currentRoom = msg[1].currentRoom;
+    console.log(currentRoom);
+    
+    if(typeof(currentRoom) != "string") {
+      if(currentRoom != null) {
+        currentRoom = null;
+      }
+    }
 
     console.log("Loading room with current room of: " + currentRoom)
 
@@ -258,6 +265,7 @@
               room : currentRoom
             }
             //socket.emit("sendInvite", send);
+            invId.parentNode.removeChild(invId); 
             socket.emit('addRoom', send);
             //socket.emit("deleteInvite", send);
 
@@ -265,7 +273,7 @@
 
             //var index = inviteList.indexOf(item);
             //inviteList.splice(index,1);
-            invId.parentNode.removeChild(invId); 
+            
 
           } else {
 
@@ -396,6 +404,11 @@
     })
 
     currentRoom = msg[1].currentRoom;
+    if(typeof(currentRoom) != "string") {
+      if(currentRoom != null) {
+        currentRoom = null;
+      }
+    }
 
     console.log("Refreshed and new current room is: " + currentRoom)
 
@@ -436,12 +449,13 @@
               message : x.S,
               room : currentRoom
             }
+            invId.parentNode.removeChild(invId); 
             socket.emit('addRoom', send);
             //socket.emit("deleteInvite", send);
             //socket.emit('refresh', currentRoom);
             //var index = inviteList.indexOf(item);
             //inviteList.splice(index,1);
-            invId.parentNode.removeChild(invId); 
+            
 
           } else {
 
@@ -496,7 +510,7 @@
       socket.emit("sendInvite", send);
       socket.emit('refresh', currentRoom);
       //socket.emit('addRoom', send);
-      Room.value = '';
+      inputRoom.value = '';
     }
   });
 
@@ -517,10 +531,20 @@
   
 
   setInterval(function() {
-    console.log("Refreshing with current room of "+ currentRoom);
-    if(currentRoom != null) {
-      socket.emit('refresh', currentRoom);
+    
+
+    if (currentRoom == undefined) {
+      currentRoom = null;
     }
+    if(typeof(currentRoom) != "string") {
+      if(currentRoom != null) {
+        currentRoom = null;
+      }
+    }
+
+    console.log("Refreshing with current room of "+ currentRoom);
+    socket.emit('refresh', currentRoom);
+    
     
   }, 3000);
 
