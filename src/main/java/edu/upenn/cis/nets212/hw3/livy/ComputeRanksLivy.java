@@ -23,7 +23,7 @@ public class ComputeRanksLivy {
 	public static void main(String[] args) throws IOException, URISyntaxException, InterruptedException, ExecutionException {
 		
 		LivyClient client = new LivyClientBuilder()
-				  .setURI(new URI("http://ec2-34-204-74-209.compute-1.amazonaws.com:8998/"))
+				  .setURI(new URI("http://ec2-54-172-7-37.compute-1.amazonaws.com:8998/"))
 				  .build();
 
 		try {

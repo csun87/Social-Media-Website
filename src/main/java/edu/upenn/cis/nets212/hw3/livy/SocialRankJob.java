@@ -4,8 +4,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.Set;
 
 import org.apache.livy.Job;
@@ -151,13 +153,17 @@ public class SocialRankJob implements Job<List<MyPair<Integer,Double>>> {
 			    
 			    
 			    
-			    
+			    Map<String, AttributeValue> expressionAttributeValues =
+				new HashMap<String, AttributeValue>();
+				expressionAttributeValues.put(":date", new AttributeValue().withS("2017-12-21"));
+				Map<String, String> expressionAttributeNames =
+				new HashMap<String, String>();
+				expressionAttributeNames.put("#d", "date"); 
 			    //Scan table for newslikes: add edges b/w users, urls
 			    String likesTableName = "newslikes";
 			    List<Tuple2<String, String>> likesList = new ArrayList<>();
 			    //List<Tuple2<String, String>> articleCategoryList = new ArrayList<>();
-			    ScanRequest likesScanRequest = new ScanRequest()
-			        .withTableName(likesTableName);
+			    ScanRequest likesScanRequest = new ScanRequest().withTableName(likesTableName); 
 			    ScanResult likesResult = dynamoDBClient.scan(likesScanRequest);
 			    //scan table for (username, liked article)
 			    for (Map<String, AttributeValue> item : likesResult.getItems()) {
@@ -222,12 +228,43 @@ public class SocialRankJob implements Job<List<MyPair<Integer,Double>>> {
 			    
 			    //Scan table for news: (article, category)
 			    String newsTableName = "news";
-			    List<Tuple2<String, String>> articleCategoryList = new ArrayList<>();
-			    ScanRequest newsScanRequest = new ScanRequest().withTableName(newsTableName);
-			    ScanResult newsResult = dynamoDBClient.scan(newsScanRequest);
-			    for (Map<String, AttributeValue> item: newsResult.getItems()) {
-			    	articleCategoryList.add(new Tuple2<>(item.get("url").getS(), item.get("category").getS()));
-			    }
+				List<Tuple2<String, String>> articleCategoryList = new ArrayList<>();
+//				ScanRequest newsScanRequest = new ScanRequest().withTableName(newsTableName)
+//				.withFilterExpression("#d = :date").withExpressionAttributeValues(expressionAttributeValues)
+//				.withExpressionAttributeNames(expressionAttributeNames);
+//				ScanResult newsResult = dynamoDBClient.scan(newsScanRequest);
+				Map<String, AttributeValue> lastKey = null;
+				do {
+					ScanRequest newsScanRequest = new ScanRequest().withTableName(newsTableName)
+							.withFilterExpression("#d = :date").withExpressionAttributeValues(expressionAttributeValues)
+							.withExpressionAttributeNames(expressionAttributeNames)
+							.withExclusiveStartKey(lastKey);
+					ScanResult newsResult = dynamoDBClient.scan(newsScanRequest);
+					List<Map<String, AttributeValue>> items = newsResult.getItems();
+					Iterator<Map<String, AttributeValue>> iter = items.iterator();
+					while (iter.hasNext()) {
+						Map<String, AttributeValue> item = iter.next();
+						if (item != null) {
+				    		if (item.containsKey("headline")) {
+				    			System.out.println(item.get("headline").getS());
+				    		}
+						}
+						if (item.containsKey("url") && item.containsKey("category")) {
+							articleCategoryList.add(new Tuple2<>(item.get("url").getS(), item.get("category").getS()));
+						}
+					}
+					lastKey = newsResult.getLastEvaluatedKey();
+				} while (lastKey != null);
+//				for (Map<String, AttributeValue> item : newsResult.getItems()){
+//				    	if (item != null) {
+//				    		if (item.containsKey("headline")) {
+//							System.out.println(item.get("headline").getS());
+//						}
+//						if (item.containsKey("url") && item.containsKey("category")) {
+//							articleCategoryList.add(new Tuple2<>(item.get("url").getS(), item.get("category").getS()));
+//						}
+//					}
+//				}
 			    JavaPairRDD<String, String> articleCategoryRDD = context.parallelizePairs(articleCategoryList);
 			    //edges between (a, (c, scale))
 			    JavaPairRDD<String, Tuple2<String, Double>> acEdgeWeightRDD = articleCategoryRDD.mapToPair(x ->
